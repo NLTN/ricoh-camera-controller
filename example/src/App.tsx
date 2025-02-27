@@ -1,12 +1,17 @@
-import { multiply } from 'ricoh-camera-controller';
+import RicohCameraController from 'ricoh-camera-controller';
 import { Text, View, StyleSheet } from 'react-native';
-
-const result = multiply(3, 7);
+import { CameraEvents } from '../../src/CameraEvents';
 
 export default function App() {
+  const camera = new RicohCameraController();
+
+  camera.on(CameraEvents.CaptureSettingsChanged, () => {
+    console.log('Hello world!');
+  });
+
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Text>Result:</Text>
     </View>
   );
 }

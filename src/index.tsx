@@ -1,3 +1,151 @@
-export function multiply(a: number, b: number): number {
-  return a * b;
+import axios, { type AxiosInstance } from 'axios';
+import { CameraEvents } from './CameraEvents';
+import { EventEmitter } from 'events';
+
+class RicohCameraController extends EventEmitter {
+  private intervalId: NodeJS.Timeout | null = null;
+  private apiClient: AxiosInstance;
+  private readonly BASE_URL = 'http://192.168.0.1';
+
+  constructor() {
+    super();
+    this.apiClient = axios.create({
+      baseURL: this.BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    this.startInterval();
+  }
+
+  getLiveViewURL(): string {
+    return `${this.BASE_URL}/v1/display`;
+  }
+
+  // #region Camera Status
+  /**
+   * Get camera status
+   *
+   * @returns True/False
+   */
+  async getStatus(): Promise<any> {
+    try {
+      const response = await this.apiClient.get('/v1/ping');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+  // #endregion
+
+  // #region Lens Focus Controls
+
+  /**
+   * Locks the camera focus at a specific area within the frame.
+   *
+   * This function instructs the camera to focus on a specific point in the frame,
+   * where `x` and `y` are expressed as percentages (0 to 100) of the frame's width and height.
+   * For example, (50, 50) would lock focus at the center of the frame.
+   *
+   * @param x - The horizontal percentage (0 to 100) representing the focus point in the frame.
+   * @param y - The vertical percentage (0 to 100) representing the focus point in the frame.
+   * @returns A promise that resolves when the focus is successfully locked.
+   */
+  async lockFocus(x: number, y: number): Promise<any> {
+    // Validation: Value Constraints
+    // Throw an error if `x` or `y` is outside the range of 0 to 100.
+    if (x < 0 || x > 100 || y < 0 || y > 100) {
+      throw new Error(
+        `Invalid focus coordinates: x=${x}, y=${y}. Values must be between 0 and 100 (inclusive).`
+      );
+    }
+
+    // Convert x and y to integers
+    x = Math.round(x);
+    y = Math.round(y);
+
+    // Send request
+    try {
+      const rawData = `pos=${x},${y}`;
+      const response = await this.apiClient.post(
+        '/v1/lens/focus/lock',
+        rawData
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // #endregion
+
+  // #region Capture Settings
+  /**
+   * Retrieves the current capture settings of the camera.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
+   */
+  async getCaptureSettings(): Promise<any> {
+    try {
+      const response = await this.apiClient.put('/v1/params/camera');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Sets the capture settings of the camera.
+   *
+   * @param {Record<string, any>} settings - An object containing the capture settings to be applied.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  async setCaptureSettings(settings: Record<string, any>): Promise<any> {
+    try {
+      const response = await this.apiClient.put('/v1/params/camera', settings);
+      await this.refreshDisplay();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+  // #endregion
+
+  // #region Camera Settings
+
+  // #endregion
+
+  // #region Camera Display
+
+  // Force refresh the display
+  async refreshDisplay(): Promise<any> {
+    try {
+      const rawData = 'cmd=mode refresh';
+      const response = await this.apiClient.post('/_gr', rawData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // #endregion
+
+  private startInterval(): void {
+    this.intervalId = setInterval(() => {
+      console.log('Interval function called every 2 seconds');
+      this.emit(CameraEvents.CaptureSettingsChanged);
+    }, 2000);
+  }
+
+  private stopInterval(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+      console.log('Interval stopped');
+      this.emit('intervalStopped');
+    }
+  }
 }
+
+export default RicohCameraController;
