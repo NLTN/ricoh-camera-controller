@@ -80,6 +80,25 @@ class RicohCameraController extends EventEmitter {
 
   // #endregion
 
+  // #region Capture Controls
+
+  async capturePhoto(x: number | null, y: number | null): Promise<any> {
+    try {
+      if (x != null && y != null) {
+        const rawData = `pos=${x},${y}`;
+        const response = await this.apiClient.post('/v1/camera/shoot', rawData);
+        return response.data;
+      } else {
+        const response = await this.apiClient.post('/v1/camera/shoot');
+        return response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // #endregion
+
   // #region Capture Settings
   /**
    * Retrieves the current capture settings of the camera.
@@ -132,20 +151,22 @@ class RicohCameraController extends EventEmitter {
   // #endregion
 
   private startInterval(): void {
-    this.intervalId = setInterval(() => {
-      console.log('Interval function called every 2 seconds');
-      this.emit(CameraEvents.CaptureSettingsChanged);
-    }, 2000);
-  }
-
-  private stopInterval(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-      console.log('Interval stopped');
-      this.emit('intervalStopped');
+    if (this.intervalId == null) {
+      this.intervalId = setInterval(() => {
+        console.log('Interval function called every 2 seconds');
+        this.emit(CameraEvents.CaptureSettingsChanged);
+      }, 2000);
     }
   }
+
+  // private stopInterval(): void {
+  //   if (this.intervalId) {
+  //     clearInterval(this.intervalId);
+  //     this.intervalId = null;
+  //     console.log('Interval stopped');
+  //     this.emit('intervalStopped');
+  //   }
+  // }
 }
 
 export default RicohCameraController;
