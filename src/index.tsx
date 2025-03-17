@@ -2,21 +2,55 @@ import axios, { type AxiosInstance } from 'axios';
 import { CameraEvents } from './CameraEvents';
 import { EventEmitter } from 'events';
 
+export interface CaptureSettings {
+  errCode: number;
+  errMsg: string;
+  av: string;
+  tv: string;
+  sv: string;
+  xv: string;
+  flashxv: string;
+  shootMode: string;
+  WBMode: string;
+  exposureMode: string;
+  meteringMode: string;
+  effect: string;
+  stillSize: string;
+  movieSize: string;
+  focusMode: string;
+  AFMode: string;
+  ssid: string;
+  key: string;
+  channel: number;
+  datetime: string; // ISO 8601 formatted date-time string
+}
+
 class RicohCameraController extends EventEmitter {
-  private intervalId: NodeJS.Timeout | null = null;
-  private apiClient: AxiosInstance;
   private readonly BASE_URL = 'http://192.168.0.1';
+  private readonly DEFAULT_TIMEOUT_MS = 1000;
+  private _intervalId: NodeJS.Timeout | null = null;
+  private _apiClient: AxiosInstance;
+  private _isConnected: boolean;
+  private _cachedCameraProperties: any | null;
+  private _cachedCaptureSettings: CaptureSettings | null;
 
   constructor() {
     super();
-    this.apiClient = axios.create({
+    // Initial values
+    this._isConnected = false;
+    this._cachedCameraProperties = null;
+    this._cachedCaptureSettings = null;
+
+    // API Client
+    this._apiClient = axios.create({
       baseURL: this.BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
+      timeout: this.DEFAULT_TIMEOUT_MS,
     });
 
-    this.startInterval();
+    this.startPolling();
   }
 
   getLiveViewURL(): string {
@@ -31,7 +65,7 @@ class RicohCameraController extends EventEmitter {
    */
   async getStatus(): Promise<any> {
     try {
-      const response = await this.apiClient.get('/v1/ping');
+      const response = await this._apiClient.get('/v1/ping');
       return response.data;
     } catch (error) {
       throw error;
@@ -68,7 +102,7 @@ class RicohCameraController extends EventEmitter {
     // Send request
     try {
       const rawData = `pos=${x},${y}`;
-      const response = await this.apiClient.post(
+      const response = await this._apiClient.post(
         '/v1/lens/focus/lock',
         rawData
       );
@@ -86,10 +120,13 @@ class RicohCameraController extends EventEmitter {
     try {
       if (x != null && y != null) {
         const rawData = `pos=${x},${y}`;
-        const response = await this.apiClient.post('/v1/camera/shoot', rawData);
+        const response = await this._apiClient.post(
+          '/v1/camera/shoot',
+          rawData
+        );
         return response.data;
       } else {
-        const response = await this.apiClient.post('/v1/camera/shoot');
+        const response = await this._apiClient.post('/v1/camera/shoot');
         return response.data;
       }
     } catch (error) {
@@ -107,7 +144,7 @@ class RicohCameraController extends EventEmitter {
    */
   async getCaptureSettings(): Promise<any> {
     try {
-      const response = await this.apiClient.put('/v1/params/camera');
+      const response = await this._apiClient.put('/v1/params/camera');
       return response.data;
     } catch (error) {
       throw error;
@@ -122,7 +159,7 @@ class RicohCameraController extends EventEmitter {
    */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
     try {
-      const response = await this.apiClient.put('/v1/params/camera', settings);
+      const response = await this._apiClient.put('/v1/params/camera', settings);
       await this.refreshDisplay();
       return response.data;
     } catch (error) {
@@ -133,6 +170,19 @@ class RicohCameraController extends EventEmitter {
 
   // #region Camera Settings
 
+  /**
+   * Retrieve all the properties of the device.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
+   */
+  async getAllProperties(): Promise<any> {
+    try {
+      const response = await this._apiClient.get('/v1/props');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
   // #endregion
 
   // #region Camera Display
@@ -141,7 +191,7 @@ class RicohCameraController extends EventEmitter {
   async refreshDisplay(): Promise<any> {
     try {
       const rawData = 'cmd=mode refresh';
-      const response = await this.apiClient.post('/_gr', rawData);
+      const response = await this._apiClient.post('/_gr', rawData);
       return response.data;
     } catch (error) {
       throw error;
@@ -150,23 +200,66 @@ class RicohCameraController extends EventEmitter {
 
   // #endregion
 
-  private startInterval(): void {
-    if (this.intervalId == null) {
-      this.intervalId = setInterval(() => {
-        console.log('Interval function called every 2 seconds');
-        this.emit(CameraEvents.CaptureSettingsChanged);
+  // #region Polling Functions
+  /**
+   * Checks and updates the camera's connection status and settings.
+   *
+   * - If connected, fetches capture settings and updates the cache. On success, emits
+   *   `CaptureSettingsChanged`; on failure, resets the cache and emits `Disconnected`.
+   * - If disconnected, attempts to retrieve all properties. On success, marks the
+   *   camera as connected and emits `Connected`; otherwise, remains disconnected.
+   */
+  private checkForUpdates(): void {
+    if (this._isConnected) {
+      this.getCaptureSettings()
+        .then((data) => {
+          this._cachedCaptureSettings = data;
+          this.emit(CameraEvents.CaptureSettingsChanged, data);
+        })
+        .catch((_) => {
+          // Reset and clear the cache
+          this._isConnected = false;
+          this._cachedCameraProperties = null;
+          this._cachedCaptureSettings = null;
+
+          // Raise an event
+          this.emit(CameraEvents.Disconnected);
+        });
+    } else {
+      // Attempt to retrieve all properties and store the data in the cache.
+      // If successful, the device is considered connected, and an event is raised.
+      // Otherwise, an error occurs, indicating that the device is not connected.
+      this.getAllProperties()
+        .then((data) => {
+          this._isConnected = true;
+          this._cachedCameraProperties = data;
+          this.emit(CameraEvents.Connected, this._cachedCameraProperties);
+        })
+        .catch((_) => (this._isConnected = false));
+    }
+  }
+
+  /**
+   * Starts the polling process to periodically check for updates.
+   */
+  private startPolling(): void {
+    if (this._intervalId == null) {
+      this._intervalId = setInterval(() => {
+        this.checkForUpdates();
       }, 2000);
     }
   }
 
-  // private stopInterval(): void {
-  //   if (this.intervalId) {
-  //     clearInterval(this.intervalId);
-  //     this.intervalId = null;
-  //     console.log('Interval stopped');
-  //     this.emit('intervalStopped');
-  //   }
-  // }
+  /**
+   * Stops the periodic updates when they are no longer needed.
+   */
+  private stopPolling(): void {
+    if (this._intervalId) {
+      clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
+  }
+  // #endregion
 }
 
 export default RicohCameraController;
