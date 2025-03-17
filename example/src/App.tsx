@@ -1,25 +1,10 @@
-import RicohCameraController from 'ricoh-camera-controller';
-import { Text, View, StyleSheet } from 'react-native';
-import { CameraEvents } from '../../src/CameraEvents';
+import { CameraControllerProvider } from './CameraControllerContext';
+import { CameraScreen } from './screens/CameraScreen';
 
 export default function App() {
-  const camera = new RicohCameraController();
-
-  camera.on(CameraEvents.CaptureSettingsChanged, () => {
-    console.log('Hello world!');
-  });
-
   return (
-    <View style={styles.container}>
-      <Text>Result:</Text>
-    </View>
+    <CameraControllerProvider>
+      <CameraScreen />
+    </CameraControllerProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
