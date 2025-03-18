@@ -21,5 +21,11 @@ export const CameraControllerProvider: React.FC<{ children: ReactNode }> = ({
 
 // Custom Hook for easy access
 export const useCameraController = () => {
-  return useContext(CameraControllerContext);
+  const context = useContext(CameraControllerContext);
+  if (!context) {
+    throw new Error(
+      'useCameraController must be used within an CameraControllerProvider'
+    );
+  }
+  return context;
 };
