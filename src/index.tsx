@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
-import { CameraEvents } from './CameraEvents';
 import { EventEmitter } from 'events';
+import { CameraEvents } from './CameraEvents';
+export { CameraEvents }; // Explicitly import and re-export it
 
 export interface CaptureSettings {
   errCode: number;
