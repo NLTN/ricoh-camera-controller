@@ -32,14 +32,14 @@ class RicohCameraController extends EventEmitter {
   private _apiClient: AxiosInstance;
   private _isConnected: boolean;
   private _cachedCameraProperties: any | null;
-  private _cachedCaptureSettings: CaptureSettings | null;
+  // private _cachedCaptureSettings: CaptureSettings | null;
 
   constructor() {
     super();
     // Initial values
     this._isConnected = false;
     this._cachedCameraProperties = null;
-    this._cachedCaptureSettings = null;
+    // this._cachedCaptureSettings = null;
 
     // API Client
     this._apiClient = axios.create({
@@ -213,14 +213,14 @@ class RicohCameraController extends EventEmitter {
     if (this._isConnected) {
       this.getCaptureSettings()
         .then((data) => {
-          this._cachedCaptureSettings = data;
+          // this._cachedCaptureSettings = data;
           this.emit(CameraEvents.CaptureSettingsChanged, data);
         })
         .catch((_) => {
           // Reset and clear the cache
           this._isConnected = false;
           this._cachedCameraProperties = null;
-          this._cachedCaptureSettings = null;
+          // this._cachedCaptureSettings = null;
 
           // Raise an event
           this.emit(CameraEvents.Disconnected);
@@ -253,12 +253,12 @@ class RicohCameraController extends EventEmitter {
   /**
    * Stops the periodic updates when they are no longer needed.
    */
-  private stopPolling(): void {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
-    }
-  }
+  // private stopPolling(): void {
+  //   if (this._intervalId) {
+  //     clearInterval(this._intervalId);
+  //     this._intervalId = null;
+  //   }
+  // }
   // #endregion
 }
 
