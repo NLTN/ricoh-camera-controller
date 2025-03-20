@@ -2,45 +2,24 @@ import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
 import { CameraEvents } from './CameraEvents';
 export { CameraEvents }; // Explicitly import and re-export it
-
-export interface CaptureSettings {
-  errCode: number;
-  errMsg: string;
-  av: string;
-  tv: string;
-  sv: string;
-  xv: string;
-  flashxv: string;
-  shootMode: string;
-  WBMode: string;
-  exposureMode: string;
-  meteringMode: string;
-  effect: string;
-  stillSize: string;
-  movieSize: string;
-  focusMode: string;
-  AFMode: string;
-  ssid: string;
-  key: string;
-  channel: number;
-  datetime: string; // ISO 8601 formatted date-time string
-}
-
+import type { IDeviceInfo, ICaptureSettings } from './interfaces';
+import { deepEqual } from './utils';
+export type { IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 class RicohCameraController extends EventEmitter {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
   private _intervalId: NodeJS.Timeout | null = null;
   private _apiClient: AxiosInstance;
   private _isConnected: boolean;
-  private _cachedCameraProperties: any | null;
-  // private _cachedCaptureSettings: CaptureSettings | null;
+  private _cachedDeviceInfo: IDeviceInfo | null;
+  private _cachedCaptureSettings: ICaptureSettings | null;
 
   constructor() {
     super();
     // Initial values
     this._isConnected = false;
-    this._cachedCameraProperties = null;
-    // this._cachedCaptureSettings = null;
+    this._cachedDeviceInfo = null;
+    this._cachedCaptureSettings = null;
 
     // API Client
     this._apiClient = axios.create({
@@ -54,6 +33,38 @@ class RicohCameraController extends EventEmitter {
     this.startPolling();
   }
 
+  // #region Getter methods to expose the variables
+
+  /**
+   * Retrieves the cached device information.
+   *
+   * This function returns the stored device information, which is intended
+   * to be a cached copy of data fetched from the camera.
+   * Accessing this cache avoids redundant computations or network requests.
+   *
+   * @returns {IDeviceInfo | null} The cached device information. Returns `null` if no
+   * device information is currently cached.
+   */
+  get info(): IDeviceInfo | null {
+    return this._cachedDeviceInfo;
+  }
+
+  /**
+   * Retrieves the cached capture settings.
+   *
+   * This function returns the stored capture settings, which are intended
+   * to be a cached copy of settings obtained from the camera.
+   * Accessing this cache avoids redundant computations or external calls.
+   *
+   * @returns {ICaptureSettings | null} The cached capture settings. Returns `null` if no
+   * capture settings are currently cached.
+   */
+  get captureSettings(): ICaptureSettings | null {
+    return this._cachedCaptureSettings;
+  }
+
+  // #endregion
+
   getLiveViewURL(): string {
     return `${this.BASE_URL}/v1/display`;
   }
@@ -62,7 +73,7 @@ class RicohCameraController extends EventEmitter {
   /**
    * Get camera status
    *
-   * @returns True/False
+   * @returns {Promise<any>} A promise that resolves with an object containing camera status.
    */
   async getStatus(): Promise<any> {
     try {
@@ -145,7 +156,7 @@ class RicohCameraController extends EventEmitter {
    */
   async getCaptureSettings(): Promise<any> {
     try {
-      const response = await this._apiClient.put('/v1/params/camera');
+      const response = await this._apiClient.get('/v1/params');
       return response.data;
     } catch (error) {
       throw error;
@@ -214,14 +225,21 @@ class RicohCameraController extends EventEmitter {
     if (this._isConnected) {
       this.getCaptureSettings()
         .then((data) => {
-          // this._cachedCaptureSettings = data;
-          this.emit(CameraEvents.CaptureSettingsChanged, data);
+          // The datetime property needs to be deleted before comparison
+          // because its value changes continuously.
+          delete data.datetime;
+
+          // Compare and raise an event if there is a change
+          if (!deepEqual(data, this._cachedCaptureSettings)) {
+            this._cachedCaptureSettings = data;
+            this.emit(CameraEvents.CaptureSettingsChanged, data);
+          }
         })
         .catch((_) => {
           // Reset and clear the cache
           this._isConnected = false;
-          this._cachedCameraProperties = null;
-          // this._cachedCaptureSettings = null;
+          this._cachedDeviceInfo = null;
+          this._cachedCaptureSettings = null;
 
           // Raise an event
           this.emit(CameraEvents.Disconnected);
@@ -233,8 +251,8 @@ class RicohCameraController extends EventEmitter {
       this.getAllProperties()
         .then((data) => {
           this._isConnected = true;
-          this._cachedCameraProperties = data;
-          this.emit(CameraEvents.Connected, this._cachedCameraProperties);
+          this._cachedDeviceInfo = data;
+          this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
         })
         .catch((_) => (this._isConnected = false));
     }
