@@ -131,6 +131,13 @@ export const CameraScreen = () => {
               setText(`${endTime - startTime}ms`);
             }}
           />
+
+          <Button
+            title="focus: 20,20"
+            onPress={() => {
+              camera.lockFocus(20, 20);
+            }}
+          />
         </View>
         <Text style={styles.text}>{textCaptureSettings}</Text>
         <TextInput
