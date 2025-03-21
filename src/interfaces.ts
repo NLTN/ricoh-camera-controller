@@ -1,3 +1,16 @@
+export interface IRicohCameraController {
+  get info(): IDeviceInfo | null;
+  get captureSettings(): ICaptureSettings | null;
+  getLiveViewURL(): string;
+  getStatus(): Promise<any>;
+  lockFocus(x: number, y: number): Promise<any>;
+  capturePhoto(x: number | null, y: number | null): Promise<any>;
+  getCaptureSettings(): Promise<any>;
+  setCaptureSettings(settings: Record<string, any>): Promise<any>;
+  getAllProperties(): Promise<any>;
+  refreshDisplay(): Promise<any>;
+}
+
 export interface IDeviceInfo {
   /** List of resolutions. */
   resoList: string[];

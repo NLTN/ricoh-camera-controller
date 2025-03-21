@@ -2,10 +2,18 @@ import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
 import { CameraEvents } from './CameraEvents';
 export { CameraEvents }; // Explicitly import and re-export it
-import type { IDeviceInfo, ICaptureSettings } from './interfaces';
+import type {
+  IRicohCameraController,
+  IDeviceInfo,
+  ICaptureSettings,
+} from './interfaces';
 import { deepEqual } from './utils';
-export type { IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
-class RicohCameraController extends EventEmitter {
+export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
+
+class RicohCameraController
+  extends EventEmitter
+  implements IRicohCameraController
+{
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
   private _intervalId: NodeJS.Timeout | null = null;
