@@ -33,7 +33,10 @@ class RicohCameraController
     this._apiClient = axios.create({
       baseURL: this.BASE_URL,
       headers: {
-        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       },
       timeout: this.DEFAULT_TIMEOUT_MS,
     });
