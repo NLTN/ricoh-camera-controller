@@ -1,4 +1,6 @@
 export interface IRicohCameraController {
+  startPolling(): void;
+  stopPolling(): void;
   get info(): IDeviceInfo | null;
   get captureSettings(): ICaptureSettings | null;
   getLiveViewURL(): string;
