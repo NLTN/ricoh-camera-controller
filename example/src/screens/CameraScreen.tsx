@@ -21,6 +21,7 @@ export const CameraScreen = () => {
   const [textInputValue, setTextInputValue] = useState('');
   const textInputRef = useRef<TextInput>(null);
   const camera = useCameraController();
+  camera.startPolling();
 
   // #region Camera Event Handlers
   const handleCameraConnected = (data: { model: string; datetime: string }) => {
