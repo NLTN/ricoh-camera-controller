@@ -22,7 +22,7 @@ class RicohCameraController
   private _cachedDeviceInfo: IDeviceInfo | null;
   private _cachedCaptureSettings: ICaptureSettings | null;
 
-  constructor() {
+  constructor(pollingEnabled = false) {
     super();
     // Initial values
     this._isConnected = false;
@@ -41,7 +41,7 @@ class RicohCameraController
       timeout: this.DEFAULT_TIMEOUT_MS,
     });
 
-    this.startPolling();
+    if (pollingEnabled) this.startPolling();
   }
 
   // #region Getter methods to expose the variables
@@ -272,7 +272,7 @@ class RicohCameraController
   /**
    * Starts the polling process to periodically check for updates.
    */
-  private startPolling(): void {
+  startPolling(): void {
     if (this._intervalId == null) {
       this._intervalId = setInterval(() => {
         this.checkForUpdates();
@@ -283,12 +283,12 @@ class RicohCameraController
   /**
    * Stops the periodic updates when they are no longer needed.
    */
-  // private stopPolling(): void {
-  //   if (this._intervalId) {
-  //     clearInterval(this._intervalId);
-  //     this._intervalId = null;
-  //   }
-  // }
+  stopPolling(): void {
+    if (this._intervalId) {
+      clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
+  }
   // #endregion
 }
 
