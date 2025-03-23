@@ -1,3 +1,5 @@
+import type { GR_COMMANDS } from './Constants';
+
 export interface IRicohCameraController {
   startPolling(): void;
   stopPolling(): void;
@@ -11,6 +13,7 @@ export interface IRicohCameraController {
   setCaptureSettings(settings: Record<string, any>): Promise<any>;
   getAllProperties(): Promise<any>;
   refreshDisplay(): Promise<any>;
+  sendCommand(command: string | GR_COMMANDS): Promise<any>;
 }
 
 export interface IDeviceInfo {
