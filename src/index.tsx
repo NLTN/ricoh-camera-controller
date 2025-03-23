@@ -9,8 +9,8 @@ import type {
 } from './interfaces';
 import { deepEqual } from './utils';
 import type { GR_COMMANDS } from './Constants';
+export type { GR_COMMANDS };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
-
 class RicohCameraController
   extends EventEmitter
   implements IRicohCameraController
