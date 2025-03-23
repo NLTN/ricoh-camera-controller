@@ -218,8 +218,7 @@ class RicohCameraController
    */
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
     try {
-      const rawData = `cmd=${command}`;
-      const response = await this._apiClient.post('/_gr', rawData);
+      const response = await this._apiClient.post('/_gr', command);
       return response.data;
     } catch (error) {
       throw error;
