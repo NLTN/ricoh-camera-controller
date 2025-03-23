@@ -12,6 +12,7 @@ import {
 import { useCameraController } from '../CameraControllerContext';
 import { CameraEvents, type ICaptureSettings } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
+import { GR_COMMANDS } from '../../../src/Constants';
 
 export const CameraScreen = () => {
   const [count, setCount] = useState(0);
@@ -137,6 +138,12 @@ export const CameraScreen = () => {
             title="focus: 20,20"
             onPress={() => {
               camera.lockFocus(20, 20);
+            }}
+          />
+          <Button
+            title="Z-IN"
+            onPress={() => {
+              camera.sendCommand(GR_COMMANDS.BUTTON_ZOOM_IN);
             }}
           />
         </View>
