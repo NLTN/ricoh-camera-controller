@@ -8,6 +8,7 @@ import type {
   ICaptureSettings,
 } from './interfaces';
 import { deepEqual } from './utils';
+import type { GR_COMMANDS } from './Constants';
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
 class RicohCameraController
@@ -209,6 +210,21 @@ class RicohCameraController
   // #endregion
 
   // #region Camera Display
+
+  /**
+   * Send a command to the device.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
+   */
+  async sendCommand(command: string | GR_COMMANDS): Promise<any> {
+    try {
+      const rawData = `cmd=${command}`;
+      const response = await this._apiClient.post('/_gr', rawData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   // Force refresh the display
   async refreshDisplay(): Promise<any> {
