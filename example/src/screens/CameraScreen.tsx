@@ -12,7 +12,7 @@ import {
 import { useCameraController } from '../CameraControllerContext';
 import { CameraEvents, type ICaptureSettings } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
-import { GR_COMMANDS } from '../../../src/Constants';
+import { GR_COMMANDS } from 'ricoh-camera-controller';
 
 export const CameraScreen = () => {
   const [count, setCount] = useState(0);
