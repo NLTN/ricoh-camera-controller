@@ -183,7 +183,12 @@ class RicohCameraController
    */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
     try {
-      const response = await this._apiClient.put('/v1/params/camera', settings);
+      // Convert the object to a query-like string
+      const rawData = Object.entries(settings)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+
+      const response = await this._apiClient.put('/v1/params/camera', rawData);
       await this.refreshDisplay();
       return response.data;
     } catch (error) {

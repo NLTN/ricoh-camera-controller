@@ -165,6 +165,14 @@ export const CameraScreen = () => {
             textInputRef.current?.setSelection(0, textInputValue.length - 1)
           }
         />
+        <View style={{ flexDirection: 'row' }}>
+          <Button
+            title="xv=+0.3"
+            onPress={() => {
+              camera.setCaptureSettings({ xv: '+0.3', sv: '400' });
+            }}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
