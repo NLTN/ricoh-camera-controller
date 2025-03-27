@@ -267,12 +267,7 @@ class RicohCameraController
           }
         })
         .catch((_) => {
-          // Reset and clear the cache
-          this._isConnected = false;
-          this._cachedDeviceInfo = null;
-          this._cachedCaptureSettings = null;
-
-          // Raise an event
+          this.reset(); // Reset and clear the cache
           this.emit(CameraEvents.Disconnected);
         });
     } else {
@@ -288,6 +283,19 @@ class RicohCameraController
         })
         .catch((_) => (this._isConnected = false));
     }
+  }
+
+  private reset(): void {
+    // Reset and clear the cache
+    this._isConnected = false;
+    this._cachedDeviceInfo = null;
+    this._cachedCaptureSettings = null;
+  }
+
+  disconnect(): void {
+    this.reset();
+    this.stopPolling();
+    this.emit(CameraEvents.Disconnected);
   }
 
   /**
