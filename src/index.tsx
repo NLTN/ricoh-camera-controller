@@ -283,6 +283,7 @@ class RicohCameraController
         .then((data) => {
           this._isConnected = true;
           this._cachedDeviceInfo = data;
+          this._cachedCaptureSettings = data;
           this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
         })
         .catch((_) => (this._isConnected = false));
