@@ -7,7 +7,7 @@ import type {
   IDeviceInfo,
   ICaptureSettings,
 } from './interfaces';
-import { deepEqual } from './utils';
+import { findDifferences } from './utils';
 import { GR_COMMANDS } from './Constants';
 export { GR_COMMANDS };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
@@ -261,9 +261,17 @@ class RicohCameraController
           delete data.datetime;
 
           // Compare and raise an event if there is a change
-          if (!deepEqual(data, this._cachedCaptureSettings)) {
+          const result = findDifferences(
+            this._cachedCaptureSettings ?? {},
+            data
+          );
+          if (result.size > 0) {
             this._cachedCaptureSettings = data;
-            this.emit(CameraEvents.CaptureSettingsChanged, data);
+            this.emit(
+              CameraEvents.CaptureSettingsChanged,
+              data,
+              result.differences
+            );
           }
         })
         .catch((_) => {

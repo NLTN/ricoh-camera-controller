@@ -1,4 +1,60 @@
 /**
+ * Interface representing the difference between two objects for a specific key.
+ */
+export interface Difference {
+  obj1?: any; // Value from the first object
+  obj2?: any; // Value from the second object
+}
+
+/**
+ * Interface representing the result of the findDifferences function.
+ */
+interface DifferenceResult {
+  differences: Record<string, Difference>; // An object containing all differences
+  size: number; // The total number of differences
+}
+
+/**
+ * Compares two objects and returns an object containing the differences.
+ * For each key that exists in either of the two objects, it checks if the values are different.
+ * If they are different, it stores the differing values in the result.
+ *
+ * @param {Record<string, any>} obj1 - The first object to compare.
+ * @param {Record<string, any>} obj2 - The second object to compare.
+ * @returns {DifferenceResult} - An object containing the differences and the total number of differences.
+ *
+ * Example:
+ * ```typescript
+ * const obj1 = { a: 1, b: 2, c: 3 };
+ * const obj2 = { a: 1, b: 3, d: 4 };
+ *
+ * const result = findDifferences(obj1, obj2);
+ * console.log(result.differences);
+ * // Output: { b: { obj1: 2, obj2: 3 }, c: { obj1: 3, obj2: undefined }, d: { obj1: undefined, obj2: 4 } }
+ * console.log(result.size); // Output: 3
+ * ```
+ */
+export const findDifferences = (
+  obj1: Record<string, any>,
+  obj2: Record<string, any>
+): DifferenceResult => {
+  let differences: Record<string, Difference> = {};
+  let size = 0; // Track the number of differences
+
+  // Get all unique keys from both objects
+  const keys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
+
+  keys.forEach((key) => {
+    if (obj1[key] !== obj2[key]) {
+      differences[key] = { obj1: obj1[key], obj2: obj2[key] };
+      ++size; // Increase the count of differences
+    }
+  });
+
+  return { differences, size };
+};
+
+/**
  * Performs a deep comparison between two values to determine if they are equivalent.
  *
  * This function recursively checks if all properties in `obj1` and `obj2` have

@@ -13,6 +13,7 @@ import { useCameraController } from '../CameraControllerContext';
 import { CameraEvents, type ICaptureSettings } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
 import { GR_COMMANDS } from 'ricoh-camera-controller';
+import type { Difference } from '../../../src/utils';
 
 export const CameraScreen = () => {
   const [count, setCount] = useState(0);
@@ -34,10 +35,14 @@ export const CameraScreen = () => {
     setText('Disconnected');
   };
 
-  const handleCaptureSettingsChanged = (data: ICaptureSettings) => {
+  const handleCaptureSettingsChanged = (
+    data: ICaptureSettings,
+    differences: Record<string, Difference>
+  ) => {
     if (data) {
       const text = `f ${data.av}, ${performance.now()}`;
       setTextCaptureSettings(text);
+      setTextLog(JSON.stringify(differences, null, 2));
     }
   };
   // #endregion
