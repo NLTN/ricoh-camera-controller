@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 export const useEventListener = (
   emitter: EventEmitter,
   eventName: string | symbol,
-  listener: (arg: any) => void
+  listener: (...args: any[]) => void
 ) => {
   useEffect(() => {
     // Add the listener
