@@ -8,7 +8,7 @@ import type {
   ICaptureSettings,
 } from './interfaces';
 import { findDifferences } from './utils';
-import { GR_COMMANDS } from './Constants';
+import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
 export { GR_COMMANDS };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 class RicohCameraController
@@ -193,6 +193,33 @@ class RicohCameraController
       return response.data;
     } catch (error) {
       throw error;
+    }
+  }
+
+  /**
+   * Retrieves the list of focus modes of the camera.
+   *
+   * @returns {string[]} The list of focus modes.
+   */
+  getFocusModeList() {
+    return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
+  }
+
+  /**
+   * Sets the focus mode.
+   *
+   * @param {string} mode - Focus mode name.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setFocusMode(mode: string): Promise<any> {
+    const command = Object.entries(FOCUS_MODE_TO_COMMAND_MAP).find(
+      ([key, _]) => key === mode
+    );
+
+    if (command !== undefined) {
+      return this.sendCommand(command[1]);
+    } else {
+      return Promise.reject(new Error('Invalid focus mode'));
     }
   }
   // #endregion

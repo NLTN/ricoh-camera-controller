@@ -170,11 +170,47 @@ export const CameraScreen = () => {
             textInputRef.current?.setSelection(0, textInputValue.length - 1)
           }
         />
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           <Button
             title="xv=+0.3"
             onPress={() => {
               camera.setCaptureSettings({ xv: '+0.3', sv: '400' });
+            }}
+          />
+          <Button
+            title="FocusModeList"
+            onPress={() => {
+              Alert.alert(
+                'List of Focus Modes',
+                camera.getFocusModeList().toString()
+              );
+            }}
+          />
+          <Button
+            title="setFocusMode('multiauto')"
+            onPress={() => {
+              camera
+                .setFocusMode('multiauto')
+                .then(() => Alert.alert('success'))
+                .catch((error) => Alert.alert('ERROR', error.message));
+            }}
+          />
+          <Button
+            title="setFocusMode('snap')"
+            onPress={() => {
+              camera
+                .setFocusMode('snap')
+                .then(() => Alert.alert('success'))
+                .catch((error) => Alert.alert('ERROR', error.message));
+            }}
+          />
+          <Button
+            title="setFocusMode('MF')"
+            onPress={() => {
+              camera
+                .setFocusMode('MF')
+                .then(() => Alert.alert('success'))
+                .catch((error) => Alert.alert('ERROR', error.message));
             }}
           />
         </View>
