@@ -9,7 +9,7 @@ import type {
 } from './interfaces';
 import { findDifferences } from './utils';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
-export { GR_COMMANDS };
+export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 class RicohCameraController
   extends EventEmitter
