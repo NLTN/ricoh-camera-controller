@@ -1,20 +1,10 @@
-import { multiply } from 'ricoh-camera-controller';
-import { Text, View, StyleSheet } from 'react-native';
-
-const result = multiply(3, 7);
+import { CameraControllerProvider } from './CameraControllerContext';
+import { CameraScreen } from './screens/CameraScreen';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
+    <CameraControllerProvider>
+      <CameraScreen />
+    </CameraControllerProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -79,7 +79,7 @@
     "prettier": "^3.0.3",
     "react": "18.3.1",
     "react-native": "0.76.7",
-    "react-native-builder-bob": "^0.36.0",
+    "react-native-builder-bob": "^0.37.0",
     "release-it": "^17.10.0",
     "typescript": "^5.2.2"
   },
@@ -173,7 +173,6 @@
       [
         "typescript",
         {
-          "project": "tsconfig.build.json",
           "esm": true
         }
       ]
@@ -183,5 +182,10 @@
     "languages": "js",
     "type": "library",
     "version": "0.48.2"
-  }
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "events": "^3.3.0"
+  },
+  "types": "./lib/typescript/commonjs/src/index.d.ts"
 }
