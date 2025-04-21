@@ -23,7 +23,7 @@ export const CameraScreen = () => {
   const [textInputValue, setTextInputValue] = useState('');
   const textInputRef = useRef<TextInput>(null);
   const camera = useCameraController();
-  camera.startPolling();
+  camera.startCameraDetectionAndPairing();
 
   // #region Camera Event Handlers
   const handleCameraConnected = (data: { model: string; datetime: string }) => {
@@ -33,6 +33,7 @@ export const CameraScreen = () => {
 
   const handleCameraDisconnected = () => {
     setText('Disconnected');
+    camera.startCameraDetectionAndPairing();
   };
 
   const handleCaptureSettingsChanged = (

@@ -1,35 +1,30 @@
 import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
-import { CameraEvents } from './CameraEvents';
+import { CameraEvents } from '../CameraEvents';
 export { CameraEvents }; // Explicitly import and re-export it
 import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
-} from './interfaces';
-import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
+} from '../interfaces';
+import { findDifferences } from '../utils';
+import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
-import { GR2Adapter, GR3Adapter } from './adapters';
 
-interface IAdapterListener {
-  event: string;
-  handler: (...args: any[]) => void;
-}
-
-class RicohCameraController
-  extends EventEmitter
-  implements IRicohCameraController
-{
+class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
   private _intervalId: NodeJS.Timeout | null = null;
   private _apiClient: AxiosInstance;
-  private adapter: IRicohCameraController | null = null;
-  private adapterListeners: IAdapterListener[] = [];
+  private _cachedDeviceInfo: IDeviceInfo | null;
+  private _cachedCaptureSettings: ICaptureSettings | null;
 
   constructor() {
     super();
+    // Initial values
+    this._cachedDeviceInfo = null;
+    this._cachedCaptureSettings = null;
 
     // API Client
     this._apiClient = axios.create({
@@ -42,104 +37,9 @@ class RicohCameraController
       },
       timeout: this.DEFAULT_TIMEOUT_MS,
     });
+
+    this.startListeningToEvents();
   }
-
-  // #region Adapter: Camera Detections
-  /**
-   * Detects and inittializes the camera
-   */
-  async detectAndInitialize() {
-    if (this.adapter == null) {
-      this.getAllProperties().then((data) => {
-        if ('model' in data) {
-          this.stopCameraDetectionAndPairing();
-
-          const isGR2 = data.model === 'GR II';
-
-          this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
-
-          this.forwardAdapterEvents([
-            CameraEvents.Disconnected,
-            CameraEvents.CaptureSettingsChanged,
-          ]);
-
-          this.emit(CameraEvents.Connected, data);
-          this.adapter.once(CameraEvents.Disconnected, () => this.reset());
-
-          this.adapter.startListeningToEvents();
-        }
-      });
-    }
-  }
-
-  /**
-   * Starts the camera detection and pairing process.
-   *
-   * Once a camera is detected, it attempts to automatically pair and connect to it.
-   * Detection will stop after the first successful connection.
-   *
-   * Emits:
-   * - 'connected' when a camera is successfully connected
-   */
-  startCameraDetectionAndPairing(): void {
-    if (this._intervalId == null) {
-      this._intervalId = setInterval(() => {
-        this.detectAndInitialize();
-      }, 1000);
-    }
-  }
-
-  /**
-   * Stops the camera detection and pairing process.
-   */
-  stopCameraDetectionAndPairing(): void {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
-    }
-  }
-  // #endregion
-
-  // #region Adapter: Event Forwarding
-  private forwardAdapterEvents(events: string[]) {
-    for (const event of events) {
-      const handler = (...args: any[]) => {
-        this.emit(event, ...args);
-      };
-      this.adapter?.on(event, handler);
-      this.adapterListeners.push({ event, handler });
-    }
-  }
-
-  private cleanupListeners() {
-    for (const { event, handler } of this.adapterListeners) {
-      this.adapter?.off(event, handler);
-    }
-    this.adapterListeners = [];
-  }
-  // #endregion
-
-  // #region Adapter: Safe Adapter
-  /**
-   * Safely retrieves the active adapter instance.
-   *
-   * If no adapter is currently set, this throws an error,
-   * ensuring that downstream code never has to manually check
-   * for null or undefined.
-   *
-   * Usage:
-   *   this.safeAdapter.lockFocus(50, 50);
-   *
-   * @throws Error if no adapter is set
-   * @returns The non-null adapter instance
-   */
-  private get safeAdapter(): IRicohCameraController {
-    if (!this.adapter) {
-      throw new Error('Camera not connected');
-    }
-    return this.adapter;
-  }
-  // #endregion
 
   // #region Getter methods to expose the variables
 
@@ -154,7 +54,7 @@ class RicohCameraController
    * device information is currently cached.
    */
   get info(): IDeviceInfo | null {
-    return this.safeAdapter.info;
+    return this._cachedDeviceInfo;
   }
 
   /**
@@ -168,13 +68,13 @@ class RicohCameraController
    * capture settings are currently cached.
    */
   get captureSettings(): ICaptureSettings | null {
-    return this.safeAdapter.captureSettings;
+    return this._cachedCaptureSettings;
   }
 
   // #endregion
 
   getLiveViewURL(): string {
-    return this.safeAdapter.getLiveViewURL();
+    return `${this.BASE_URL}/v1/display`;
   }
 
   // #region Camera Status
@@ -184,7 +84,12 @@ class RicohCameraController
    * @returns {Promise<any>} A promise that resolves with an object containing camera status.
    */
   async getStatus(): Promise<any> {
-    return this.safeAdapter.getStatus();
+    try {
+      const response = await this._apiClient.get('/v1/ping');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
   // #endregion
 
@@ -202,7 +107,29 @@ class RicohCameraController
    * @returns A promise that resolves when the focus is successfully locked.
    */
   async lockFocus(x: number, y: number): Promise<any> {
-    this.safeAdapter.lockFocus(x, y);
+    // Validation: Value Constraints
+    // Throw an error if `x` or `y` is outside the range of 0 to 100.
+    if (x < 0 || x > 100 || y < 0 || y > 100) {
+      throw new Error(
+        `Invalid focus coordinates: x=${x}, y=${y}. Values must be between 0 and 100 (inclusive).`
+      );
+    }
+
+    // Convert x and y to integers
+    x = Math.round(x);
+    y = Math.round(y);
+
+    // Send request
+    try {
+      const rawData = `pos=${x},${y}`;
+      const response = await this._apiClient.post(
+        '/v1/lens/focus/lock',
+        rawData
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // #endregion
@@ -210,7 +137,21 @@ class RicohCameraController
   // #region Capture Controls
 
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
-    return this.safeAdapter.capturePhoto(x, y);
+    try {
+      if (x != null && y != null) {
+        const rawData = `pos=${x},${y}`;
+        const response = await this._apiClient.post(
+          '/v1/camera/shoot',
+          rawData
+        );
+        return response.data;
+      } else {
+        const response = await this._apiClient.post('/v1/camera/shoot');
+        return response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
   // #endregion
@@ -222,7 +163,12 @@ class RicohCameraController
    * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
    */
   async getCaptureSettings(): Promise<any> {
-    return this.safeAdapter.getCaptureSettings();
+    try {
+      const response = await this._apiClient.get('/v1/params');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -232,7 +178,18 @@ class RicohCameraController
    * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
    */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
-    return this.safeAdapter.setCaptureSettings(settings);
+    try {
+      // Convert the object to a query-like string
+      const rawData = Object.entries(settings)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+
+      const response = await this._apiClient.put('/v1/params/camera', rawData);
+      await this.refreshDisplay();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -241,7 +198,7 @@ class RicohCameraController
    * @returns {string[]} The list of focus modes.
    */
   getFocusModeList() {
-    return this.safeAdapter.getFocusModeList();
+    return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
   }
 
   /**
@@ -251,7 +208,15 @@ class RicohCameraController
    * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
    */
   setFocusMode(mode: string): Promise<any> {
-    return this.safeAdapter.setFocusMode(mode);
+    const command = Object.entries(FOCUS_MODE_TO_COMMAND_MAP).find(
+      ([key, _]) => key === mode
+    );
+
+    if (command !== undefined) {
+      return this.sendCommand(command[1]);
+    } else {
+      return Promise.reject(new Error('Invalid focus mode'));
+    }
   }
   // #endregion
 
@@ -301,16 +266,42 @@ class RicohCameraController
 
   // #endregion
 
-  // #region Other Functions
+  // #region Polling Functions
+  /**
+   * Checks and updates the camera's connection status and settings.
+   *
+   * - If connected, fetches capture settings and updates the cache. On success, emits
+   *   `CaptureSettingsChanged`; on failure, resets the cache and emits `Disconnected`.
+   * - If disconnected, attempts to retrieve all properties. On success, marks the
+   *   camera as connected and emits `Connected`; otherwise, remains disconnected.
+   */
+  private detectSettingsChanges(): void {
+    this.getCaptureSettings()
+      .then((data) => {
+        // The datetime property needs to be deleted before comparison
+        // because its value changes continuously.
+        delete data.datetime;
 
-  private reset(): void {
-    this.cleanupListeners();
-    this.stopListeningToEvents();
-    this.adapter = null;
+        // Compare and raise an event if there is a change
+        const result = findDifferences(this._cachedCaptureSettings ?? {}, data);
+        if (result.size > 0) {
+          this._cachedCaptureSettings = data;
+          this.emit(
+            CameraEvents.CaptureSettingsChanged,
+            data,
+            result.differences
+          );
+        }
+      })
+      .catch((_) => {
+        this.disconnect();
+      });
   }
 
   disconnect(): void {
-    this.reset();
+    this._cachedDeviceInfo = null;
+    this._cachedCaptureSettings = null;
+    this.stopListeningToEvents();
     this.emit(CameraEvents.Disconnected);
   }
 
@@ -318,16 +309,25 @@ class RicohCameraController
    * Starts the polling process to periodically check for updates.
    */
   startListeningToEvents(): void {
-    this.safeAdapter.startListeningToEvents();
+    if (this._intervalId == null) {
+      this.detectSettingsChanges();
+
+      this._intervalId = setInterval(() => {
+        this.detectSettingsChanges();
+      }, 2000);
+    }
   }
 
   /**
    * Stops the periodic updates when they are no longer needed.
    */
   stopListeningToEvents(): void {
-    this.safeAdapter.stopListeningToEvents();
+    if (this._intervalId) {
+      clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
   }
   // #endregion
 }
 
-export default RicohCameraController;
+export default GR2Adapter;
