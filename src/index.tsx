@@ -154,7 +154,10 @@ class RicohCameraController
    * device information is currently cached.
    */
   get info(): IDeviceInfo | null {
-    return this.safeAdapter.info;
+    if (this.adapter === null) {
+      return null;
+    }
+    return this.adapter.info;
   }
 
   /**
@@ -168,7 +171,10 @@ class RicohCameraController
    * capture settings are currently cached.
    */
   get captureSettings(): ICaptureSettings | null {
-    return this.safeAdapter.captureSettings;
+    if (this.adapter === null) {
+      return null;
+    }
+    return this.adapter.captureSettings;
   }
 
   // #endregion
