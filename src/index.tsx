@@ -144,6 +144,14 @@ class RicohCameraController
   // #region Getter methods to expose the variables
 
   /**
+   * Indicates whether a camera is currently connected.
+   * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
+   */
+  get isConnected(): boolean {
+    return this.adapter !== null;
+  }
+
+  /**
    * Retrieves the cached device information.
    *
    * This function returns the stored device information, which is intended
@@ -316,8 +324,10 @@ class RicohCameraController
   }
 
   disconnect(): void {
-    this.reset();
-    this.emit(CameraEvents.Disconnected);
+    if (this.isConnected) {
+      this.reset();
+      this.emit(CameraEvents.Disconnected);
+    }
   }
 
   /**
