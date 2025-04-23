@@ -250,6 +250,25 @@ class RicohCameraController
   }
 
   /**
+   * Retrieves the list of dial modes of the camera.
+   *
+   * @returns {string[]} The list of focus modes.
+   */
+  getDialModeList(): (string | null)[] {
+    return this.safeAdapter.getDialModeList();
+  }
+
+  /**
+   * Sets the dial mode.
+   *
+   * @param {string} mode - Dial mode name.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setDialMode(mode: string): Promise<any> {
+    return this.safeAdapter.setDialMode(mode);
+  }
+
+  /**
    * Retrieves the list of focus modes of the camera.
    *
    * @returns {string[]} The list of focus modes.

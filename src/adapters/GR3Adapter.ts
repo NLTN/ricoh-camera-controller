@@ -193,6 +193,25 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   /**
+   * Retrieves the list of dial modes of the camera.
+   *
+   * @returns {string[]} The list of focus modes.
+   */
+  getDialModeList(): (string | null)[] {
+    return ['U3', 'U2', 'U1', 'P', 'AV', 'TV', 'M', null];
+  }
+
+  /**
+   * Sets the dial mode.
+   *
+   * @param {string} mode - Dial mode name.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setDialMode(mode: string): Promise<any> {
+    return this.sendCommand(`cmd=bdial ${mode}`);
+  }
+
+  /**
    * Retrieves the list of focus modes of the camera.
    *
    * @returns {string[]} The list of focus modes.

@@ -8,6 +8,8 @@ export interface IRicohCameraController extends EventEmitter {
   get captureSettings(): ICaptureSettings | null;
   getLiveViewURL(): string;
   getStatus(): Promise<any>;
+  getDialModeList(): (string | null)[];
+  setDialMode(mode: string): Promise<any>;
   getFocusModeList(): string[];
   setFocusMode(mode: string): Promise<any>;
   lockFocus(x: number, y: number): Promise<any>;
