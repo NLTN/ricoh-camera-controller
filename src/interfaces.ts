@@ -21,7 +21,7 @@ export interface IRicohCameraController extends EventEmitter {
   sendCommand(command: string | GR_COMMANDS): Promise<any>;
 }
 
-export interface IDeviceInfo {
+export interface IDeviceInfo extends ICaptureSettings {
   /** List of resolutions. */
   resoList: string[];
 
