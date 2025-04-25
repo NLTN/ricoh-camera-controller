@@ -59,11 +59,12 @@ class RicohCameraController
           this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
 
           this.forwardAdapterEvents([
+            CameraEvents.Connected,
             CameraEvents.Disconnected,
             CameraEvents.CaptureSettingsChanged,
           ]);
 
-          this.emit(CameraEvents.Connected, data);
+          // this.emit(CameraEvents.Connected, data);
           this.adapter.once(CameraEvents.Disconnected, () => this.reset());
 
           this.adapter.startListeningToEvents();
@@ -148,7 +149,7 @@ class RicohCameraController
    * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
    */
   get isConnected(): boolean {
-    return this.adapter !== null;
+    return this.adapter !== null && this.adapter.isConnected;
   }
 
   /**

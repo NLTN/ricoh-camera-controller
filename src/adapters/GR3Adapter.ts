@@ -17,6 +17,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   private readonly DEFAULT_TIMEOUT_MS = 1000;
   private _intervalId: NodeJS.Timeout | null = null;
   private _apiClient: AxiosInstance;
+  private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
   private _cachedCaptureSettings: ICaptureSettings | null;
 
@@ -42,6 +43,14 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   // #region Getter methods to expose the variables
+
+  /**
+   * Indicates whether a camera is currently connected.
+   * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
+   */
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
 
   /**
    * Retrieves the cached device information.
@@ -294,30 +303,46 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * - If disconnected, attempts to retrieve all properties. On success, marks the
    *   camera as connected and emits `Connected`; otherwise, remains disconnected.
    */
-  private detectSettingsChanges(): void {
-    this.getCaptureSettings()
-      .then((data) => {
-        // The datetime property needs to be deleted before comparison
-        // because its value changes continuously.
-        delete data.datetime;
+  private fetchData(): void {
+    if (this._isConnected) {
+      this.getCaptureSettings()
+        .then((data) => {
+          // The datetime property needs to be deleted before comparison
+          // because its value changes continuously.
+          delete data.datetime;
 
-        // Compare and raise an event if there is a change
-        const result = findDifferences(this._cachedCaptureSettings ?? {}, data);
-        if (result.size > 0) {
-          this._cachedCaptureSettings = data;
-          this.emit(
-            CameraEvents.CaptureSettingsChanged,
-            data,
-            result.differences
+          // Compare and raise an event if there is a change
+          const result = findDifferences(
+            this._cachedCaptureSettings ?? {},
+            data
           );
-        }
-      })
-      .catch((_) => {
-        this.disconnect();
+          if (result.size > 0) {
+            this._cachedCaptureSettings = data;
+            this.emit(
+              CameraEvents.CaptureSettingsChanged,
+              data,
+              result.differences
+            );
+          }
+        })
+        .catch((_) => {
+          this.disconnect();
+        });
+    } else {
+      // Attempt to retrieve all properties and store the data in the cache.
+      // If successful, the device is considered connected, and an event is raised.
+      // Otherwise, an error occurs, indicating that the device is not connected.
+      this.getAllProperties().then((data) => {
+        this._isConnected = true;
+        this._cachedDeviceInfo = data;
+        this._cachedCaptureSettings = data;
+        this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
       });
+    }
   }
 
   disconnect(): void {
+    this._isConnected = false;
     this._cachedDeviceInfo = null;
     this._cachedCaptureSettings = null;
     this.stopListeningToEvents();
@@ -329,10 +354,10 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   startListeningToEvents(): void {
     if (this._intervalId == null) {
-      this.detectSettingsChanges();
+      this.fetchData();
 
       this._intervalId = setInterval(() => {
-        this.detectSettingsChanges();
+        this.fetchData();
       }, 2000);
     }
   }

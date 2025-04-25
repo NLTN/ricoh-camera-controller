@@ -4,6 +4,7 @@ import type { GR_COMMANDS } from './Constants';
 export interface IRicohCameraController extends EventEmitter {
   startListeningToEvents(): void;
   stopListeningToEvents(): void;
+  get isConnected(): boolean;
   get info(): IDeviceInfo | null;
   get captureSettings(): ICaptureSettings | null;
   getLiveViewURL(): string;
