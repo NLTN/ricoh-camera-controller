@@ -1,12 +1,18 @@
+import { EventEmitter } from 'events';
 import type { GR_COMMANDS } from './Constants';
 
-export interface IRicohCameraController {
-  startPolling(): void;
-  stopPolling(): void;
+export interface IRicohCameraController extends EventEmitter {
+  startListeningToEvents(): void;
+  stopListeningToEvents(): void;
+  get isConnected(): boolean;
   get info(): IDeviceInfo | null;
   get captureSettings(): ICaptureSettings | null;
   getLiveViewURL(): string;
   getStatus(): Promise<any>;
+  getDialModeList(): (string | null)[];
+  setDialMode(mode: string): Promise<any>;
+  getFocusModeList(): string[];
+  setFocusMode(mode: string): Promise<any>;
   lockFocus(x: number, y: number): Promise<any>;
   capturePhoto(x: number | null, y: number | null): Promise<any>;
   getCaptureSettings(): Promise<any>;
@@ -16,7 +22,7 @@ export interface IRicohCameraController {
   sendCommand(command: string | GR_COMMANDS): Promise<any>;
 }
 
-export interface IDeviceInfo {
+export interface IDeviceInfo extends ICaptureSettings {
   /** List of resolutions. */
   resoList: string[];
 
