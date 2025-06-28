@@ -224,7 +224,17 @@ class RicohCameraController
 
   // #region Capture Controls
 
-  async capturePhoto(x: number | null, y: number | null): Promise<any> {
+  /**
+   * Captures a photo using provided coordinates.
+   *
+   * @param {number | null} x The x-coordinate (optional).
+   * @param {number | null} y The y-coordinate (optional).
+   * @returns {Promise<any>} A promise resolving with the result of the capture.
+   */
+  async capturePhoto(
+    x: number | null = null,
+    y: number | null = null
+  ): Promise<any> {
     return this.safeAdapter.capturePhoto(x, y);
   }
 
