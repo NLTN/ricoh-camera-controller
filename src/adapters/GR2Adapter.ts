@@ -308,14 +308,11 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     if (this._isConnected) {
       this.getCaptureSettings()
         .then((data) => {
-          // The datetime property needs to be deleted before comparison
-          // because its value changes continuously.
-          delete data.datetime;
-
           // Compare and raise an event if there is a change
           const result = findDifferences(
             this._cachedCaptureSettings ?? {},
-            data
+            data,
+            ['datetime', 'storages']
           );
           if (result.size > 0) {
             this._cachedCaptureSettings = data;
