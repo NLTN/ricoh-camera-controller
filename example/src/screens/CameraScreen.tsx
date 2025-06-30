@@ -137,11 +137,41 @@ export const CameraScreen = () => {
           />
         </View>
 
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <Button
+            title="Capture photo"
+            onPress={() => {
+              camera.capturePhoto();
+            }}
+          />
           <Button
             title="lens_focus: 20,20"
             onPress={() => {
               camera.lockFocus(20, 20);
+            }}
+          />
+          <Button
+            title="ISO 400"
+            onPress={() => {
+              camera.setCaptureSettings({ sv: 400 });
+            }}
+          />
+          <Button
+            title="ISO auto"
+            onPress={() => {
+              camera.setCaptureSettings({ sv: 'auto' });
+            }}
+          />
+          <Button
+            title="Shutter Speed: 1/80"
+            onPress={() => {
+              camera.setCaptureSettings({ tv: '1.80' });
+            }}
+          />
+          <Button
+            title="Shutter Speed: 5s"
+            onPress={() => {
+              camera.setCaptureSettings({ tv: '5.1' });
             }}
           />
           <Button
