@@ -83,7 +83,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   // #endregion
 
   getLiveViewURL(): string {
-    return `${this.BASE_URL}/v1/display`;
+    return `${this.BASE_URL}/v1/liveview`;
   }
 
   // #region Camera Status
@@ -131,10 +131,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     // Send request
     try {
       const rawData = `pos=${x},${y}`;
-      const response = await this._apiClient.post(
-        '/v1/lens/focus/lock',
-        rawData
-      );
+      const response = await this._apiClient.post('/v1/lens/focus', rawData);
       return response.data;
     } catch (error) {
       throw error;
@@ -173,7 +170,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   async getCaptureSettings(): Promise<any> {
     try {
-      const response = await this._apiClient.get('/v1/params');
+      const response = await this._apiClient.get('/v1/props');
       return response.data;
     } catch (error) {
       throw error;
