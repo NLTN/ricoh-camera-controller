@@ -142,10 +142,18 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Capture Controls
 
+  /**
+   * Captures a photo, optionally with x, y coordinates
+   *
+   * @param {number | null} x The x-coordinate of the photo. If null, coordinates are not specified.
+   * @param {number | null} y The y-coordinate of the photo. If null, coordinates are not specified.
+   * @returns {Promise<any>} A promise that resolves with the response data from the camera API.
+   * @throws {Error} If there is an error during the API request.
+   */
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
     try {
       if (x != null && y != null) {
-        const rawData = `pos=${x},${y}`;
+        const rawData = `pos=${x},${y}&af=on`;
         const response = await this._apiClient.post(
           '/v1/camera/shoot',
           rawData
