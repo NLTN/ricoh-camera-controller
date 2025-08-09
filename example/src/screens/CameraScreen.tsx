@@ -253,11 +253,35 @@ export const CameraScreen = () => {
           />
 
           <Button
+            title="getDriveModeList()"
+            onPress={() => {
+              try {
+                const result = camera.getDriveModeList();
+                Alert.alert('Self-timer option', result.toString());
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
             title="getDriveMode()"
             onPress={() => {
               try {
                 const result = camera.getDriveMode();
                 Alert.alert('Drive Mode', result);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getSelfTimerOptionList()"
+            onPress={() => {
+              try {
+                const result = camera.getSelfTimerOptionList();
+                Alert.alert('Self-timer option', result.toString());
               } catch (err) {
                 handleError(err);
               }
