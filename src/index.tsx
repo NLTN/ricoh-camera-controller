@@ -299,6 +299,20 @@ class RicohCameraController
   }
 
   /**
+   * Returns the list of supported self-timer options for the selected drive mode.
+   *
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
+   *
+   * Example:
+   * ```ts
+   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
+   * ```
+   */
+  getSelfTimerOptionList(): string[] {
+    return this.safeAdapter.getSelfTimerOptionList();
+  }
+
+  /**
    * Retrieves the currently selected self-timer option.
    *
    * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
@@ -306,22 +320,6 @@ class RicohCameraController
    */
   getSelfTimerOption(): string {
     return this.safeAdapter.getSelfTimerOption();
-  }
-
-  /**
-   * Returns the list of supported self-timer options for a given drive mode.
-   *
-   * @param drive - The drive mode for which to retrieve the timer options.
-   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the given drive mode.
-   *
-   * Example:
-   * ```ts
-   * getTimerOptions("interval"); // ["off", "2s", "10s"]
-   * getTimerOptions("continuous"); // ["off"]
-   * ```
-   */
-  getSelfTimerOptionList(driveMode: string): string[] {
-    return this.safeAdapter.getSelfTimerOptionList(driveMode);
   }
 
   /**

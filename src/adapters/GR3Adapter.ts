@@ -246,13 +246,28 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns The name of the current drive mode (e.g., "single", "continuous").
    * @throws Error if the shoot mode is not found.
    */
-  getDriveMode(): string {
+  getDriveMode(): DriveMode {
     const shootMode = this._cachedCaptureSettings?.shootMode;
     if (shootMode !== undefined) {
-      return shootModeReverseMap[shootMode]!.driveMode;
+      return shootModeReverseMap[shootMode]!.driveMode as DriveMode;
     } else {
       throw new Error(`Shoot mode "${shootMode}" not found.`);
     }
+  }
+
+  /**
+   * Returns the list of supported self-timer options for the selected drive mode.
+   *
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
+   *
+   * Example:
+   * ```ts
+   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
+   * ```
+   */
+  getSelfTimerOptionList(): string[] {
+    const driveMode = this.getDriveMode();
+    return Object.keys(shootModeLookup[driveMode]) as TimerOption<DriveMode>[];
   }
 
   /**
@@ -268,22 +283,6 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     } else {
       throw new Error(`Shoot mode "${shootMode}" not found.`);
     }
-  }
-
-  /**
-   * Returns the list of supported self-timer options for a given drive mode.
-   *
-   * @param drive - The drive mode for which to retrieve the timer options.
-   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the given drive mode.
-   *
-   * Example:
-   * ```ts
-   * getTimerOptions("interval"); // ["off", "2s", "10s"]
-   * getTimerOptions("continuous"); // ["off"]
-   * ```
-   */
-  getSelfTimerOptionList(driveMode: DriveMode): string[] {
-    return Object.keys(shootModeLookup[driveMode]) as TimerOption<DriveMode>[];
   }
 
   /**

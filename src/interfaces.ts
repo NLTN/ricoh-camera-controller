@@ -13,7 +13,7 @@ export interface IRicohCameraController extends EventEmitter {
   setDialMode(mode: string): Promise<any>;
   getDriveModeList(): string[];
   getDriveMode(): string;
-  getSelfTimerOptionList(driveMode: string): string[];
+  getSelfTimerOptionList(): string[];
   getSelfTimerOption(): string;
   setShootMode(driveMode: string, selfTimerOption: string): Promise<any>;
   getFocusModeList(): string[];
