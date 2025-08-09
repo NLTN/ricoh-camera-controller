@@ -79,6 +79,15 @@ export const CameraScreen = () => {
     handleCaptureSettingsChanged
   );
 
+  function handleError(error: unknown, title = 'Error') {
+    if (error instanceof Error) {
+      Alert.alert(title, error.message);
+    } else if (typeof error === 'string') {
+      Alert.alert(title, error);
+    } else {
+      Alert.alert(title, 'Something went wrong');
+    }
+  }
   return (
     <SafeAreaView>
       <ScrollView style={styles.container}>
@@ -240,6 +249,40 @@ export const CameraScreen = () => {
                 .setFocusMode('MF')
                 .then(() => Alert.alert('success'))
                 .catch((error) => Alert.alert('ERROR', error.message));
+            }}
+          />
+
+          <Button
+            title="getDriveMode()"
+            onPress={() => {
+              try {
+                const result = camera.getDriveMode();
+                Alert.alert('Drive Mode', result);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getSelfTimerOption()"
+            onPress={() => {
+              try {
+                const result = camera.getSelfTimerOption();
+                Alert.alert('Self-timer option', result);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="setShootMode: self2s"
+            onPress={() => {
+              camera
+                .setShootMode('continuous', 'off')
+                .then(() => Alert.alert('success'))
+                .catch((error) => handleError(error));
             }}
           />
         </View>
