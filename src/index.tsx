@@ -280,6 +280,62 @@ class RicohCameraController
   }
 
   /**
+   * Retrieves the list of drive modes of the camera.
+   *
+   * @returns {string[]} The list of drive modes.
+   */
+  getDriveModeList(): string[] {
+    return this.safeAdapter.getDriveModeList();
+  }
+
+  /**
+   * Retrieves the currently selected drive mode.
+   *
+   * @returns The name of the current drive mode (e.g., "single", "continuous").
+   * @throws Error if the shoot mode is not found.
+   */
+  getDriveMode(): string {
+    return this.safeAdapter.getDriveMode();
+  }
+
+  /**
+   * Retrieves the currently selected self-timer option.
+   *
+   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
+   * @throws Error if the shoot mode is not found.
+   */
+  getSelfTimerOption(): string {
+    return this.safeAdapter.getSelfTimerOption();
+  }
+
+  /**
+   * Returns the list of supported self-timer options for a given drive mode.
+   *
+   * @param drive - The drive mode for which to retrieve the timer options.
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the given drive mode.
+   *
+   * Example:
+   * ```ts
+   * getTimerOptions("interval"); // ["off", "2s", "10s"]
+   * getTimerOptions("continuous"); // ["off"]
+   * ```
+   */
+  getSelfTimerOptionList(driveMode: string): string[] {
+    return this.safeAdapter.getSelfTimerOptionList(driveMode);
+  }
+
+  /**
+   * Sets the shoot mode / drive mode / self timer.
+   *
+   * @param {string} driveMode - Drive mode.
+   * @param {string} selfTimerOption - Self-timer option.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
+    return this.safeAdapter.setShootMode(driveMode, selfTimerOption);
+  }
+
+  /**
    * Retrieves the list of focus modes of the camera.
    *
    * @returns {string[]} The list of focus modes.

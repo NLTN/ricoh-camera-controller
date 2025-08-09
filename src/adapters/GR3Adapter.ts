@@ -8,6 +8,12 @@ import type {
   ICaptureSettings,
 } from '../interfaces';
 import { findDifferences } from '../utils';
+import {
+  shootModeLookup,
+  shootModeReverseMap,
+  type DriveMode,
+  type TimerOption,
+} from '../GR3/shootModeLookup';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
@@ -199,7 +205,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
         .join('&');
 
       const response = await this._apiClient.put('/v1/params/camera', rawData);
-      await this.refreshDisplay();
+      // await this.refreshDisplay();
       return response.data;
     } catch (error) {
       throw error;
@@ -223,6 +229,76 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   setDialMode(mode: string): Promise<any> {
     return this.sendCommand(`cmd=bdial ${mode}`);
+  }
+
+  /**
+   * Retrieves the list of drive modes of the camera.
+   *
+   * @returns {string[]} The list of drive modes.
+   */
+  getDriveModeList(): string[] {
+    return Object.keys(shootModeLookup) as (keyof typeof shootModeLookup)[];
+  }
+
+  /**
+   * Retrieves the currently selected drive mode.
+   *
+   * @returns The name of the current drive mode (e.g., "single", "continuous").
+   * @throws Error if the shoot mode is not found.
+   */
+  getDriveMode(): string {
+    const shootMode = this._cachedCaptureSettings?.shootMode;
+    if (shootMode !== undefined) {
+      return shootModeReverseMap[shootMode]!.driveMode;
+    } else {
+      throw new Error(`Shoot mode "${shootMode}" not found.`);
+    }
+  }
+
+  /**
+   * Retrieves the currently selected self-timer option.
+   *
+   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
+   * @throws Error if the shoot mode is not found.
+   */
+  getSelfTimerOption(): string {
+    const shootMode = this._cachedCaptureSettings?.shootMode;
+    if (shootMode !== undefined) {
+      return shootModeReverseMap[shootMode]!.selfTimer;
+    } else {
+      throw new Error(`Shoot mode "${shootMode}" not found.`);
+    }
+  }
+
+  /**
+   * Returns the list of supported self-timer options for a given drive mode.
+   *
+   * @param drive - The drive mode for which to retrieve the timer options.
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the given drive mode.
+   *
+   * Example:
+   * ```ts
+   * getTimerOptions("interval"); // ["off", "2s", "10s"]
+   * getTimerOptions("continuous"); // ["off"]
+   * ```
+   */
+  getSelfTimerOptionList(driveMode: DriveMode): string[] {
+    return Object.keys(shootModeLookup[driveMode]) as TimerOption<DriveMode>[];
+  }
+
+  /**
+   * Sets the shoot mode / drive mode / self timer.
+   *
+   * @param {DriveMode} driveMode - Drive mode.
+   * @param {TimerOption} selfTimerOption - Self-timer option.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setShootMode<D extends DriveMode, T extends TimerOption<D>>(
+    driveMode: D,
+    selfTimerOption: T
+  ): Promise<any> {
+    const shootMode = shootModeLookup[driveMode][selfTimerOption];
+    return this.setCaptureSettings({ shootMode: shootMode });
   }
 
   /**

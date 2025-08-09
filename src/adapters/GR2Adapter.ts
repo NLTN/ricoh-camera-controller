@@ -222,6 +222,62 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   /**
+   * Retrieves the list of drive modes of the camera.
+   *
+   * @returns {string[]} The list of drive modes.
+   */
+  getDriveModeList() {
+    return ['single', 'intervalComp', 'interval', 'continuous', 'bracket'];
+  }
+
+  /**
+   * Retrieves the currently selected drive mode.
+   *
+   * @returns The name of the current drive mode (e.g., "single", "continuous").
+   * @throws Error not implemented.
+   */
+  getDriveMode(): string {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Retrieves the currently selected self-timer option.
+   *
+   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
+   * @throws Error not implemented.
+   */
+  getSelfTimerOption(): string {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Returns the list of supported self-timer options for a given drive mode.
+   *
+   * @param drive - The drive mode for which to retrieve the timer options.
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the given drive mode.
+   *
+   * Example:
+   * ```ts
+   * getTimerOptions("interval"); // ["off", "2s", "10s"]
+   * getTimerOptions("continuous"); // ["off"]
+   * ```
+   */
+  getSelfTimerOptionList(_driveMode: string): string[] {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Sets the shoot mode / drive mode / self timer.
+   *
+   * @param {string} _driveMode - Drive mode.
+   * @param {string} _selfTimerOption - Self-timer option.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setShootMode(_driveMode: string, _selfTimerOption: string): Promise<any> {
+    return Promise.reject(new Error('Not implemented'));
+  }
+
+  /**
    * Retrieves the list of focus modes of the camera.
    *
    * @returns {string[]} The list of focus modes.
