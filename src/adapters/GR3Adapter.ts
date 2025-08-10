@@ -296,8 +296,17 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     driveMode: D,
     selfTimerOption: T
   ): Promise<any> {
-    const shootMode = shootModeLookup[driveMode][selfTimerOption];
-    return this.setCaptureSettings({ shootMode: shootMode });
+    const supportedSelfTimerOptions = Object.keys(
+      shootModeLookup[driveMode]
+    ) as string[];
+
+    if (supportedSelfTimerOptions.includes(selfTimerOption as string)) {
+      const shootMode = shootModeLookup[driveMode][selfTimerOption];
+      return this.setCaptureSettings({ shootMode: shootMode });
+    } else {
+      const shootMode = shootModeLookup[driveMode].off;
+      return this.setCaptureSettings({ shootMode: shootMode });
+    }
   }
 
   /**
