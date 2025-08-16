@@ -8,27 +8,51 @@ import {
   TextInput,
   SafeAreaView,
   View,
+  Dimensions,
 } from 'react-native';
 import { useCameraController } from '../CameraControllerContext';
 import { CameraEvents, type ICaptureSettings } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
 import { GR_COMMANDS } from 'ricoh-camera-controller';
 import type { Difference } from '../../../src/utils';
+import { CameraDisplay } from '../components/CameraDisplay';
 
 export const CameraScreen = () => {
-  const [count, setCount] = useState(0);
   const [text, setText] = useState('Connection Status');
-  const [textLog, setTextLog] = useState('Log');
   const [textCaptureSettings, setTextCaptureSettings] = useState('Log');
   const [textInputValue, setTextInputValue] = useState('');
+  // #region 🔍 Refs
+  const cameraDisplayRef = useRef<CameraDisplay>(null);
   const textInputRef = useRef<TextInput>(null);
+  // #endregion
+
+  // #region Layout
+  const [width] = useState(Dimensions.get('window').width);
+  const displayWidth = width;
+  const displayHeight = (width * 3) / 4;
+  // #endregion
+
   const camera = useCameraController();
   camera.startCameraDetectionAndPairing();
 
+  // #region 🛠️ Handlers
+  const handleCameraDisplayTouch = (x: number, y: number) => {
+    camera.lockFocus(x, y).then(() => {
+      if (camera.captureSettings?.AFMode !== 'spot') {
+        camera.setFocusMode('spot').then(() => camera.refreshDisplay());
+      }
+    });
+  };
+  // #endregion
+
   // #region Camera Event Handlers
   const handleCameraConnected = (data: { model: string; datetime: string }) => {
-    setText(`Connected`);
-    setTextLog(`Model: ${data.model} Datetime: ${data.datetime}`);
+    setText(`Connected` + `Model: ${data.model} Datetime: ${data.datetime}`);
+    camera.startListeningToEvents();
+
+    setTimeout(() => {
+      cameraDisplayRef.current?.setURL(camera.getLiveViewURL());
+    }, 500);
   };
 
   const handleCameraDisconnected = () => {
@@ -41,9 +65,8 @@ export const CameraScreen = () => {
     differences: Record<string, Difference>
   ) => {
     if (data) {
-      const text = `f ${data.av}, ${performance.now()}`;
-      setTextCaptureSettings(text);
-      setTextLog(JSON.stringify(differences, null, 2));
+      setTextCaptureSettings(`f ${data.av}, ${performance.now()}`);
+      setTextInputValue(JSON.stringify(differences, null, 2));
     }
   };
   // #endregion
@@ -56,31 +79,30 @@ export const CameraScreen = () => {
     handleCaptureSettingsChanged
   );
 
+  function handleError(error: unknown, title = 'Error') {
+    if (error instanceof Error) {
+      Alert.alert(title, error.message);
+    } else if (typeof error === 'string') {
+      Alert.alert(title, error);
+    } else {
+      Alert.alert(title, 'Something went wrong');
+    }
+  }
   return (
     <SafeAreaView>
       <ScrollView style={styles.container}>
         <Text style={styles.text}>{text}</Text>
-        <Text style={styles.text}>Count: {count}</Text>
-        <Text style={styles.text}>{textLog}</Text>
 
+        <CameraDisplay
+          ref={cameraDisplayRef}
+          url={''}
+          reloadKey={0}
+          width={displayWidth}
+          height={displayHeight}
+          style={[styles.display]}
+          onTouch={handleCameraDisplayTouch}
+        />
         <View style={{ flexDirection: 'row' }}>
-          <Button
-            title="Button 1"
-            onPress={() => {
-              setCount((prev) => ++prev);
-              setText('Button Pressed');
-              camera
-                ?.getAllProperties()
-                .then((data) => {
-                  setTextLog(
-                    `Model: ${data.model} Datetime: ${data.datetime} firmware: ${data.firmwareVersion}`
-                  );
-                })
-                .catch((_) => {
-                  setTextLog('error>>>>');
-                });
-            }}
-          />
           <Button
             title="Num of Listeners"
             onPress={() => {
@@ -106,7 +128,7 @@ export const CameraScreen = () => {
           />
 
           <Button
-            title="Current Capture Settings"
+            title="Capture Settings"
             onPress={() => {
               setTextInputValue('loading...');
               const startTime = performance.now();
@@ -124,26 +146,41 @@ export const CameraScreen = () => {
           />
         </View>
 
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           <Button
-            title="Current Capture from Cache"
+            title="Capture photo"
             onPress={() => {
-              setTextInputValue('loading...');
-              const startTime = performance.now();
-
-              setTextInputValue(
-                JSON.stringify(camera.captureSettings, null, 4)
-              );
-
-              const endTime = performance.now();
-              setText(`${endTime - startTime}ms`);
+              camera.capturePhoto();
             }}
           />
-
           <Button
-            title="focus: 20,20"
+            title="lens_focus: 20,20"
             onPress={() => {
               camera.lockFocus(20, 20);
+            }}
+          />
+          <Button
+            title="ISO 400"
+            onPress={() => {
+              camera.setCaptureSettings({ sv: 400 });
+            }}
+          />
+          <Button
+            title="ISO auto"
+            onPress={() => {
+              camera.setCaptureSettings({ sv: 'auto' });
+            }}
+          />
+          <Button
+            title="Shutter Speed: 1/80"
+            onPress={() => {
+              camera.setCaptureSettings({ tv: '1.80' });
+            }}
+          />
+          <Button
+            title="Shutter Speed: 5s"
+            onPress={() => {
+              camera.setCaptureSettings({ tv: '5.1' });
             }}
           />
           <Button
@@ -214,6 +251,64 @@ export const CameraScreen = () => {
                 .catch((error) => Alert.alert('ERROR', error.message));
             }}
           />
+
+          <Button
+            title="getDriveModeList()"
+            onPress={() => {
+              try {
+                const result = camera.getDriveModeList();
+                Alert.alert('Self-timer option', result.toString());
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getDriveMode()"
+            onPress={() => {
+              try {
+                const result = camera.getDriveMode();
+                Alert.alert('Drive Mode', result);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getSelfTimerOptionList()"
+            onPress={() => {
+              try {
+                const result = camera.getSelfTimerOptionList();
+                Alert.alert('Self-timer option', result.toString());
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getSelfTimerOption()"
+            onPress={() => {
+              try {
+                const result = camera.getSelfTimerOption();
+                Alert.alert('Self-timer option', result);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="setShootMode: self2s"
+            onPress={() => {
+              camera
+                .setShootMode('continuous', 'off')
+                .then(() => Alert.alert('success'))
+                .catch((error) => handleError(error));
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -222,6 +317,13 @@ export const CameraScreen = () => {
 
 const styles = StyleSheet.create({
   container: { backgroundColor: 'black' },
+  display: {
+    alignSelf: 'center',
+    borderColor: '#b60006',
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: 'hidden', // Ensure the WebView content respects the border radius
+  },
   text: {
     color: 'white',
   },

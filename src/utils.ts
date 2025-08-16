@@ -21,6 +21,7 @@ interface DifferenceResult {
  *
  * @param {Record<string, any>} obj1 - The first object to compare.
  * @param {Record<string, any>} obj2 - The second object to compare.
+ * @param {string[] | undefined } excludedKeys - (Optional) An array of keys to exclude from the comparison.
  * @returns {DifferenceResult} - An object containing the differences and the total number of differences.
  *
  * Example:
@@ -36,7 +37,8 @@ interface DifferenceResult {
  */
 export const findDifferences = (
   obj1: Record<string, any>,
-  obj2: Record<string, any>
+  obj2: Record<string, any>,
+  excludedKeys: string[] = []
 ): DifferenceResult => {
   let differences: Record<string, Difference> = {};
   let size = 0; // Track the number of differences
@@ -45,13 +47,55 @@ export const findDifferences = (
   const keys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
 
   keys.forEach((key) => {
-    if (obj1[key] !== obj2[key]) {
-      differences[key] = { obj1: obj1[key], obj2: obj2[key] };
-      ++size; // Increase the count of differences
+    if (excludedKeys.includes(key) === false) {
+      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {
+        if (arraysEqual(obj1[key], obj2[key]) === false) {
+          differences[key] = { obj1: obj1[key], obj2: obj2[key] };
+          ++size; // Increase the count of differences
+        }
+      } else if (obj1[key] !== obj2[key]) {
+        differences[key] = { obj1: obj1[key], obj2: obj2[key] };
+        ++size; // Increase the count of differences
+      }
     }
   });
 
   return { differences, size };
+};
+
+/**
+ * Checks if two arrays are equal.
+ *
+ * This function compares two arrays for equality. It checks if they have the same length
+ * and if their corresponding elements are equal.
+ *
+ * @param {any[]} arr1 - The first array to compare.
+ * @param {any[]} arr2 - The second array to compare.
+ * @returns {boolean} - Returns `true` if the arrays are equal, otherwise `false`.
+ *
+ * @example
+ * ```ts
+ * import { arraysEqual } from './utils';
+ *
+ * const arr1 = [1, 2, 3];
+ * const arr2 = [1, 2, 3];
+ * const arr3 = [1, 2, 4];
+ *
+ * console.log(arraysEqual(arr1, arr2)); // true
+ * console.log(arraysEqual(arr1, arr3)); // false
+ * ```
+ */
+export const arraysEqual = (arr1: any[], arr2: any[]): boolean => {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  let i = 0;
+  while (i < arr1.length && arr1[i] === arr2[i]) {
+    ++i;
+  }
+
+  return i === arr1.length;
 };
 
 /**

@@ -8,6 +8,12 @@ import type {
   ICaptureSettings,
 } from '../interfaces';
 import { findDifferences } from '../utils';
+import {
+  shootModeLookup,
+  shootModeReverseMap,
+  type DriveMode,
+  type TimerOption,
+} from '../GR3/shootModeLookup';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
@@ -83,7 +89,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   // #endregion
 
   getLiveViewURL(): string {
-    return `${this.BASE_URL}/v1/display`;
+    return `${this.BASE_URL}/v1/liveview`;
   }
 
   // #region Camera Status
@@ -131,10 +137,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     // Send request
     try {
       const rawData = `pos=${x},${y}`;
-      const response = await this._apiClient.post(
-        '/v1/lens/focus/lock',
-        rawData
-      );
+      const response = await this._apiClient.post('/v1/lens/focus', rawData);
       return response.data;
     } catch (error) {
       throw error;
@@ -145,10 +148,18 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Capture Controls
 
+  /**
+   * Captures a photo, optionally with x, y coordinates
+   *
+   * @param {number | null} x The x-coordinate of the photo. If null, coordinates are not specified.
+   * @param {number | null} y The y-coordinate of the photo. If null, coordinates are not specified.
+   * @returns {Promise<any>} A promise that resolves with the response data from the camera API.
+   * @throws {Error} If there is an error during the API request.
+   */
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
     try {
       if (x != null && y != null) {
-        const rawData = `pos=${x},${y}`;
+        const rawData = `pos=${x},${y}&af=on`;
         const response = await this._apiClient.post(
           '/v1/camera/shoot',
           rawData
@@ -173,7 +184,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   async getCaptureSettings(): Promise<any> {
     try {
-      const response = await this._apiClient.get('/v1/params');
+      const response = await this._apiClient.get('/v1/props');
       return response.data;
     } catch (error) {
       throw error;
@@ -194,7 +205,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
         .join('&');
 
       const response = await this._apiClient.put('/v1/params/camera', rawData);
-      await this.refreshDisplay();
+      // await this.refreshDisplay();
       return response.data;
     } catch (error) {
       throw error;
@@ -218,6 +229,84 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   setDialMode(mode: string): Promise<any> {
     return this.sendCommand(`cmd=bdial ${mode}`);
+  }
+
+  /**
+   * Retrieves the list of drive modes of the camera.
+   *
+   * @returns {string[]} The list of drive modes.
+   */
+  getDriveModeList(): string[] {
+    return Object.keys(shootModeLookup) as (keyof typeof shootModeLookup)[];
+  }
+
+  /**
+   * Retrieves the currently selected drive mode.
+   *
+   * @returns The name of the current drive mode (e.g., "single", "continuous").
+   * @throws Error if the shoot mode is not found.
+   */
+  getDriveMode(): DriveMode {
+    const shootMode = this._cachedCaptureSettings?.shootMode;
+    if (shootMode !== undefined) {
+      return shootModeReverseMap[shootMode]!.driveMode as DriveMode;
+    } else {
+      throw new Error(`Shoot mode "${shootMode}" not found.`);
+    }
+  }
+
+  /**
+   * Returns the list of supported self-timer options for the selected drive mode.
+   *
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
+   *
+   * Example:
+   * ```ts
+   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
+   * ```
+   */
+  getSelfTimerOptionList(): string[] {
+    const driveMode = this.getDriveMode();
+    return Object.keys(shootModeLookup[driveMode]) as TimerOption<DriveMode>[];
+  }
+
+  /**
+   * Retrieves the currently selected self-timer option.
+   *
+   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
+   * @throws Error if the shoot mode is not found.
+   */
+  getSelfTimerOption(): string {
+    const shootMode = this._cachedCaptureSettings?.shootMode;
+    if (shootMode !== undefined) {
+      return shootModeReverseMap[shootMode]!.selfTimer;
+    } else {
+      throw new Error(`Shoot mode "${shootMode}" not found.`);
+    }
+  }
+
+  /**
+   * Sets the shoot mode / drive mode / self timer.
+   *
+   * @param {DriveMode} driveMode - Drive mode.
+   * @param {TimerOption} selfTimerOption - Self-timer option.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
+  setShootMode<D extends DriveMode, T extends TimerOption<D>>(
+    driveMode: D,
+    selfTimerOption: T
+  ): Promise<any> {
+    const supportedSelfTimerOptions = Object.keys(
+      shootModeLookup[driveMode]
+    ) as string[];
+
+    if (supportedSelfTimerOptions.includes(selfTimerOption as string)) {
+      const shootMode = shootModeLookup[driveMode][selfTimerOption];
+      return this.setCaptureSettings({ shootMode: shootMode });
+    } else {
+      const shootMode = shootModeLookup[driveMode].off;
+      return this.setCaptureSettings({ shootMode: shootMode });
+    }
   }
 
   /**
@@ -307,14 +396,11 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     if (this._isConnected) {
       this.getCaptureSettings()
         .then((data) => {
-          // The datetime property needs to be deleted before comparison
-          // because its value changes continuously.
-          delete data.datetime;
-
           // Compare and raise an event if there is a change
           const result = findDifferences(
             this._cachedCaptureSettings ?? {},
-            data
+            data,
+            ['datetime', 'storages']
           );
           if (result.size > 0) {
             this._cachedCaptureSettings = data;
