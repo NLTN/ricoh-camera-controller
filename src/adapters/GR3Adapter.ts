@@ -99,12 +99,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing camera status.
    */
   async getStatus(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/ping');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/ping');
+    return response.data;
   }
   // #endregion
 
@@ -135,13 +131,9 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     y = Math.round(y);
 
     // Send request
-    try {
-      const rawData = `pos=${x},${y}`;
-      const response = await this._apiClient.post('/v1/lens/focus', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const rawData = `pos=${x},${y}`;
+    const response = await this._apiClient.post('/v1/lens/focus', rawData);
+    return response.data;
   }
 
   // #endregion
@@ -157,20 +149,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws {Error} If there is an error during the API request.
    */
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
-    try {
-      if (x != null && y != null) {
-        const rawData = `pos=${x},${y}&af=on`;
-        const response = await this._apiClient.post(
-          '/v1/camera/shoot',
-          rawData
-        );
-        return response.data;
-      } else {
-        const response = await this._apiClient.post('/v1/camera/shoot');
-        return response.data;
-      }
-    } catch (error) {
-      throw error;
+    if (x != null && y != null) {
+      const rawData = `pos=${x},${y}&af=on`;
+      const response = await this._apiClient.post('/v1/camera/shoot', rawData);
+      return response.data;
+    } else {
+      const response = await this._apiClient.post('/v1/camera/shoot');
+      return response.data;
     }
   }
 
@@ -183,12 +168,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
    */
   async getCaptureSettings(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
 
   /**
@@ -198,18 +179,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
    */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
-    try {
-      // Convert the object to a query-like string
-      const rawData = Object.entries(settings)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('&');
+    // Convert the object to a query-like string
+    const rawData = Object.entries(settings)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
 
-      const response = await this._apiClient.put('/v1/params/camera', rawData);
-      // await this.refreshDisplay();
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.put('/v1/params/camera', rawData);
+    return response.data;
   }
 
   /**
@@ -345,12 +321,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
   async getAllProperties(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
   // #endregion
 
@@ -362,23 +334,15 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
-    try {
-      const response = await this._apiClient.post('/_gr', command);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.post('/_gr', command);
+    return response.data;
   }
 
   // Force refresh the display
   async refreshDisplay(): Promise<any> {
-    try {
-      const rawData = 'cmd=mode refresh';
-      const response = await this._apiClient.post('/_gr', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return Promise.reject(
+      new Error('refreshDisplay() is not supported on Ricoh GR III')
+    );
   }
 
   // #endregion
