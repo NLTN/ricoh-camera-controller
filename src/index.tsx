@@ -58,11 +58,7 @@ class RicohCameraController
 
           this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
 
-          this.forwardAdapterEvents([
-            CameraEvents.Connected,
-            CameraEvents.Disconnected,
-            CameraEvents.CaptureSettingsChanged,
-          ]);
+          this.forwardAdapterEvents(Object.values(CameraEvents));
 
           // this.emit(CameraEvents.Connected, data);
           this.adapter.once(CameraEvents.Disconnected, () => this.reset());
@@ -217,7 +213,7 @@ class RicohCameraController
    * @returns A promise that resolves when the focus is successfully locked.
    */
   async lockFocus(x: number, y: number): Promise<any> {
-    this.safeAdapter.lockFocus(x, y);
+    return this.safeAdapter.lockFocus(x, y);
   }
 
   // #endregion
