@@ -3,5 +3,7 @@ export enum CameraEvents {
   Disconnected = 'disconnected',
   SettingsChanged = 'settingsChanged',
   CaptureSettingsChanged = 'captureSettingsChanged',
+  FocusChanged = 'focusChanged',
+  OrientationChanged = 'orientationChanged',
   ImageStored = 'imageStored',
 }
