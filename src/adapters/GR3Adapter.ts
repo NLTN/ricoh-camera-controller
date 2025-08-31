@@ -7,7 +7,7 @@ import type {
   IDeviceInfo,
   ICaptureSettings,
 } from '../interfaces';
-import { findDifferences } from '../utils';
+import { findDifferences, hasAnyKey, type Difference } from '../utils';
 import {
   shootModeLookup,
   shootModeReverseMap,
@@ -15,6 +15,7 @@ import {
   type TimerOption,
 } from '../GR3/shootModeLookup';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
+import { EVENT_KEY_MAP } from '../eventMap';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -25,13 +26,11 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   private _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
-  private _cachedCaptureSettings: ICaptureSettings | null;
 
   constructor() {
     super();
     // Initial values
     this._cachedDeviceInfo = null;
-    this._cachedCaptureSettings = null;
 
     // API Client
     this._apiClient = axios.create({
@@ -83,7 +82,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * capture settings are currently cached.
    */
   get captureSettings(): ICaptureSettings | null {
-    return this._cachedCaptureSettings;
+    return this._cachedDeviceInfo;
   }
 
   // #endregion
@@ -223,7 +222,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws Error if the shoot mode is not found.
    */
   getDriveMode(): DriveMode {
-    const shootMode = this._cachedCaptureSettings?.shootMode;
+    const shootMode = this._cachedDeviceInfo?.shootMode;
     if (shootMode !== undefined) {
       return shootModeReverseMap[shootMode]!.driveMode as DriveMode;
     } else {
@@ -253,7 +252,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws Error if the shoot mode is not found.
    */
   getSelfTimerOption(): string {
-    const shootMode = this._cachedCaptureSettings?.shootMode;
+    const shootMode = this._cachedDeviceInfo?.shootMode;
     if (shootMode !== undefined) {
       return shootModeReverseMap[shootMode]!.selfTimer;
     } else {
@@ -347,6 +346,24 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #endregion
 
+  // #region Helpers
+  private dispatchChangedEvents(differences: Record<string, Difference>) {
+    // Event: Capture settings change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.CaptureSettingsChanged)) {
+      this.emit(CameraEvents.CaptureSettingsChanged, this.info, differences);
+    }
+    // Event: Lens focus change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.FocusChanged)) {
+      this.emit(CameraEvents.FocusChanged, this.info, differences);
+    }
+
+    // Event: Camera orientation change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.OrientationChanged)) {
+      this.emit(CameraEvents.OrientationChanged, this.info, differences);
+    }
+  }
+  // #endregion
+
   // #region Polling Functions
   /**
    * Checks and updates the camera's connection status and settings.
@@ -358,21 +375,16 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   private fetchData(): void {
     if (this._isConnected) {
-      this.getCaptureSettings()
+      this.getAllProperties()
         .then((data) => {
           // Compare and raise an event if there is a change
-          const result = findDifferences(
-            this._cachedCaptureSettings ?? {},
-            data,
-            ['datetime', 'storages']
-          );
+          const result = findDifferences(this._cachedDeviceInfo ?? {}, data, [
+            'datetime',
+            'storages',
+          ]);
           if (result.size > 0) {
-            this._cachedCaptureSettings = data;
-            this.emit(
-              CameraEvents.CaptureSettingsChanged,
-              data,
-              result.differences
-            );
+            this._cachedDeviceInfo = data;
+            this.dispatchChangedEvents(result.differences);
           }
         })
         .catch((_) => {
@@ -385,7 +397,6 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       this.getAllProperties().then((data) => {
         this._isConnected = true;
         this._cachedDeviceInfo = data;
-        this._cachedCaptureSettings = data;
         this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
       });
     }
@@ -394,7 +405,6 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   disconnect(): void {
     this._isConnected = false;
     this._cachedDeviceInfo = null;
-    this._cachedCaptureSettings = null;
     this.stopListeningToEvents();
     this.emit(CameraEvents.Disconnected);
   }
