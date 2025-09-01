@@ -7,7 +7,7 @@ import type {
   IDeviceInfo,
   ICaptureSettings,
 } from '../interfaces';
-import { findDifferences } from '../utils';
+import { findDifferences, hasAnyKey, type Difference } from '../utils';
 import {
   shootModeLookup,
   shootModeReverseMap,
@@ -15,6 +15,7 @@ import {
   type TimerOption,
 } from '../GR3/shootModeLookup';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
+import { EVENT_KEY_MAP } from '../eventMap';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -25,13 +26,11 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   private _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
-  private _cachedCaptureSettings: ICaptureSettings | null;
 
   constructor() {
     super();
     // Initial values
     this._cachedDeviceInfo = null;
-    this._cachedCaptureSettings = null;
 
     // API Client
     this._apiClient = axios.create({
@@ -83,7 +82,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * capture settings are currently cached.
    */
   get captureSettings(): ICaptureSettings | null {
-    return this._cachedCaptureSettings;
+    return this._cachedDeviceInfo;
   }
 
   // #endregion
@@ -99,12 +98,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing camera status.
    */
   async getStatus(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/ping');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/ping');
+    return response.data;
   }
   // #endregion
 
@@ -135,13 +130,9 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     y = Math.round(y);
 
     // Send request
-    try {
-      const rawData = `pos=${x},${y}`;
-      const response = await this._apiClient.post('/v1/lens/focus', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const rawData = `pos=${x},${y}`;
+    const response = await this._apiClient.post('/v1/lens/focus', rawData);
+    return response.data;
   }
 
   // #endregion
@@ -157,20 +148,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws {Error} If there is an error during the API request.
    */
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
-    try {
-      if (x != null && y != null) {
-        const rawData = `pos=${x},${y}&af=on`;
-        const response = await this._apiClient.post(
-          '/v1/camera/shoot',
-          rawData
-        );
-        return response.data;
-      } else {
-        const response = await this._apiClient.post('/v1/camera/shoot');
-        return response.data;
-      }
-    } catch (error) {
-      throw error;
+    if (x != null && y != null) {
+      const rawData = `pos=${x},${y}&af=on`;
+      const response = await this._apiClient.post('/v1/camera/shoot', rawData);
+      return response.data;
+    } else {
+      const response = await this._apiClient.post('/v1/camera/shoot');
+      return response.data;
     }
   }
 
@@ -183,12 +167,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
    */
   async getCaptureSettings(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
 
   /**
@@ -198,18 +178,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
    */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
-    try {
-      // Convert the object to a query-like string
-      const rawData = Object.entries(settings)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('&');
+    // Convert the object to a query-like string
+    const rawData = Object.entries(settings)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
 
-      const response = await this._apiClient.put('/v1/params/camera', rawData);
-      // await this.refreshDisplay();
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.put('/v1/params/camera', rawData);
+    return response.data;
   }
 
   /**
@@ -247,7 +222,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws Error if the shoot mode is not found.
    */
   getDriveMode(): DriveMode {
-    const shootMode = this._cachedCaptureSettings?.shootMode;
+    const shootMode = this._cachedDeviceInfo?.shootMode;
     if (shootMode !== undefined) {
       return shootModeReverseMap[shootMode]!.driveMode as DriveMode;
     } else {
@@ -277,7 +252,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @throws Error if the shoot mode is not found.
    */
   getSelfTimerOption(): string {
-    const shootMode = this._cachedCaptureSettings?.shootMode;
+    const shootMode = this._cachedDeviceInfo?.shootMode;
     if (shootMode !== undefined) {
       return shootModeReverseMap[shootMode]!.selfTimer;
     } else {
@@ -345,12 +320,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
   async getAllProperties(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
   // #endregion
 
@@ -362,25 +333,35 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
-    try {
-      const response = await this._apiClient.post('/_gr', command);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.post('/_gr', command);
+    return response.data;
   }
 
   // Force refresh the display
   async refreshDisplay(): Promise<any> {
-    try {
-      const rawData = 'cmd=mode refresh';
-      const response = await this._apiClient.post('/_gr', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return Promise.reject(
+      new Error('refreshDisplay() is not supported on Ricoh GR III')
+    );
   }
 
+  // #endregion
+
+  // #region Helpers
+  private dispatchChangedEvents(differences: Record<string, Difference>) {
+    // Event: Capture settings change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.CaptureSettingsChanged)) {
+      this.emit(CameraEvents.CaptureSettingsChanged, this.info, differences);
+    }
+    // Event: Lens focus change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.FocusChanged)) {
+      this.emit(CameraEvents.FocusChanged, this.info, differences);
+    }
+
+    // Event: Camera orientation change
+    if (hasAnyKey(differences, EVENT_KEY_MAP.OrientationChanged)) {
+      this.emit(CameraEvents.OrientationChanged, this.info, differences);
+    }
+  }
   // #endregion
 
   // #region Polling Functions
@@ -394,21 +375,16 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    */
   private fetchData(): void {
     if (this._isConnected) {
-      this.getCaptureSettings()
+      this.getAllProperties()
         .then((data) => {
           // Compare and raise an event if there is a change
-          const result = findDifferences(
-            this._cachedCaptureSettings ?? {},
-            data,
-            ['datetime', 'storages']
-          );
+          const result = findDifferences(this._cachedDeviceInfo ?? {}, data, [
+            'datetime',
+            'storages',
+          ]);
           if (result.size > 0) {
-            this._cachedCaptureSettings = data;
-            this.emit(
-              CameraEvents.CaptureSettingsChanged,
-              data,
-              result.differences
-            );
+            this._cachedDeviceInfo = data;
+            this.dispatchChangedEvents(result.differences);
           }
         })
         .catch((_) => {
@@ -421,7 +397,6 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       this.getAllProperties().then((data) => {
         this._isConnected = true;
         this._cachedDeviceInfo = data;
-        this._cachedCaptureSettings = data;
         this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
       });
     }
@@ -430,7 +405,6 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   disconnect(): void {
     this._isConnected = false;
     this._cachedDeviceInfo = null;
-    this._cachedCaptureSettings = null;
     this.stopListeningToEvents();
     this.emit(CameraEvents.Disconnected);
   }
