@@ -145,3 +145,26 @@ export const deepEqual = (obj1: any, obj2: any): boolean => {
 
   return true;
 };
+
+/**
+ * Checks if an object contains at least one key from a given set.
+ *
+ * @template T - Type of valid keys (string | number | symbol).
+ * @param obj - The object to inspect.
+ * @param keys - A Set of keys to check against.
+ * @returns `true` if at least one key in the object matches a key in the set,
+ *          otherwise `false`.
+ *
+ * @example
+ * const expectedKeys = new Set(["darkMode", "language"]);
+ *
+ * hasAnyKey({ darkMode: true }, expectedKeys); // true
+ * hasAnyKey({ foo: 123 }, expectedKeys);       // false
+ */
+export const hasAnyKey = <T extends string | number | symbol>(
+  obj: object | undefined,
+  keys: Set<T> | ReadonlySet<T> | undefined
+): boolean => {
+  if (obj === undefined || keys === undefined) return false;
+  return Object.keys(obj).some((k) => keys.has(k as T));
+};

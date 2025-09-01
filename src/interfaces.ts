@@ -93,6 +93,12 @@ export interface IDeviceInfo extends ICaptureSettings {
 
   /** Battery level, represented as a value ranging from 0 to 100. */
   battery: number;
+
+  /** Camera Orientation values: positive, vertical_left, vertical_right, reverse.
+   *
+   * Supported cameras: GR III, GR IIIx
+   */
+  cameraOrientation: string;
 }
 
 export interface ICaptureSettings {

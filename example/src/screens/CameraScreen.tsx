@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useCameraController } from '../CameraControllerContext';
-import { CameraEvents, type ICaptureSettings } from 'ricoh-camera-controller';
+import { CameraEvents, type IDeviceInfo } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
 import { GR_COMMANDS } from 'ricoh-camera-controller';
 import type { Difference } from '../../../src/utils';
@@ -61,7 +61,7 @@ export const CameraScreen = () => {
   };
 
   const handleCaptureSettingsChanged = (
-    data: ICaptureSettings,
+    data: IDeviceInfo,
     differences: Record<string, Difference>
   ) => {
     if (data) {
@@ -69,6 +69,27 @@ export const CameraScreen = () => {
       setTextInputValue(JSON.stringify(differences, null, 2));
     }
   };
+
+  const handleFocusChanged = (
+    data: IDeviceInfo,
+    differences: Record<string, Difference>
+  ) => {
+    if (data) {
+      setTextCaptureSettings(`f ${data.av}, ${performance.now()}`);
+      setTextInputValue(JSON.stringify(differences, null, 2));
+    }
+  };
+
+  const handleCameraOrientationChanged = (
+    data: IDeviceInfo,
+    differences: Record<string, Difference>
+  ) => {
+    if (data) {
+      setTextCaptureSettings(`f ${data.av}, ${performance.now()}`);
+      setTextInputValue(JSON.stringify(differences, null, 2));
+    }
+  };
+
   // #endregion
 
   useEventListener(camera, CameraEvents.Connected, handleCameraConnected);
@@ -77,6 +98,13 @@ export const CameraScreen = () => {
     camera,
     CameraEvents.CaptureSettingsChanged,
     handleCaptureSettingsChanged
+  );
+  useEventListener(camera, CameraEvents.FocusChanged, handleFocusChanged);
+
+  useEventListener(
+    camera,
+    CameraEvents.OrientationChanged,
+    handleCameraOrientationChanged
   );
 
   function handleError(error: unknown, title = 'Error') {
