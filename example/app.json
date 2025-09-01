@@ -1,5 +1,8 @@
 {
   "expo": {
+    "experiments": {
+      "reactCanary": true
+    },
     "name": "example",
     "slug": "example",
     "version": "1.0.0",
