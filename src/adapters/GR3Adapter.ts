@@ -16,13 +16,14 @@ import {
 } from '../GR3/shootModeLookup';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
+import { Poller } from '../Poller';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
 class GR3Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
-  private _intervalId: NodeJS.Timeout | null = null;
+  private _poller: Poller;
   private _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
@@ -44,7 +45,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       timeout: this.DEFAULT_TIMEOUT_MS,
     });
 
-    this.startListeningToEvents();
+    this._poller = new Poller(() => this.fetchData(), 2000);
+    this._poller.start(); // this.startListeningToEvents();
   }
 
   // #region Getter methods to expose the variables
@@ -413,23 +415,14 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
    * Starts the polling process to periodically check for updates.
    */
   startListeningToEvents(): void {
-    if (this._intervalId == null) {
-      this.fetchData();
-
-      this._intervalId = setInterval(() => {
-        this.fetchData();
-      }, 2000);
-    }
+    this._poller.start();
   }
 
   /**
    * Stops the periodic updates when they are no longer needed.
    */
   stopListeningToEvents(): void {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
-    }
+    this._poller.stop();
   }
   // #endregion
 }
