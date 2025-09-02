@@ -2,30 +2,202 @@ import { EventEmitter } from 'events';
 import type { GR_COMMANDS } from './Constants';
 
 export interface IRicohCameraController extends EventEmitter {
+  /**
+   * Starts the polling process to periodically check for updates.
+   */
   startListeningToEvents(): void;
+
+  /**
+   * Stops the periodic updates when they are no longer needed.
+   */
   stopListeningToEvents(): void;
+
+  /**
+   * Sets the polling interval for fetching data.
+   *
+   * @param ms - New polling interval in milliseconds
+   */
   setPollInterval(ms: number): void;
+
+  /**
+   * Temporarily changes the polling interval for fetching data
+   * for a fixed number of cycles before reverting to the default.
+   *
+   * @param ms - Temporary polling interval in milliseconds
+   * @param cycles - Number of polling cycles to run at the temporary interval
+   * @throws If `cycles` is not an integer ≥ 1
+   */
   setPollIntervalTemporarily(ms: number, cycles: number): void;
+
+  /**
+   * Indicates whether a camera is currently connected.
+   * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
+   */
   get isConnected(): boolean;
+
+  /**
+   * Retrieves the cached device information.
+   *
+   * @returns {IDeviceInfo | null} The cached device information. Returns `null` if no
+   * device information is currently cached.
+   */
   get info(): IDeviceInfo | null;
+
+  /**
+   * Retrieves the cached capture settings.
+   *
+   * @returns {ICaptureSettings | null} The cached capture settings. Returns `null` if no
+   * capture settings are currently cached.
+   */
   get captureSettings(): ICaptureSettings | null;
+
+  /**
+   * Returns the URL for the live view stream.
+   *
+   * @returns {string} The full URL for accessing the live view endpoint.
+   */
   getLiveViewURL(): string;
+
+  /**
+   * Get camera status
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing camera status.
+   */
   getStatus(): Promise<any>;
+
+  /**
+   * Retrieves the list of dial modes of the camera.
+   *
+   * @returns {string[]} The list of focus modes.
+   */
   getDialModeList(): (string | null)[];
+
+  /**
+   * Sets the dial mode.
+   *
+   * @param {string} mode - Dial mode name.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
   setDialMode(mode: string): Promise<any>;
+
+  /**
+   * Retrieves the list of drive modes of the camera.
+   *
+   * @returns {string[]} The list of drive modes.
+   */
   getDriveModeList(): string[];
+
+  /**
+   * Retrieves the currently selected drive mode.
+   *
+   * @returns The name of the current drive mode (e.g., "single", "continuous").
+   * @throws Error if the shoot mode is not found.
+   */
   getDriveMode(): string;
+
+  /**
+   * Returns the list of supported self-timer options for the selected drive mode.
+   *
+   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
+   *
+   * Example:
+   * ```ts
+   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
+   * ```
+   */
   getSelfTimerOptionList(): string[];
+
+  /**
+   * Retrieves the currently selected self-timer option.
+   *
+   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
+   * @throws Error if the shoot mode is not found.
+   */
   getSelfTimerOption(): string;
+
+  /**
+   * Sets the shoot mode / drive mode / self timer.
+   *
+   * @param {string} driveMode - Drive mode.
+   * @param {string} selfTimerOption - Self-timer option.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
   setShootMode(driveMode: string, selfTimerOption: string): Promise<any>;
+
+  /**
+   * Retrieves the list of focus modes of the camera.
+   *
+   * @returns {string[]} The list of focus modes.
+   */
   getFocusModeList(): string[];
+
+  /**
+   * Sets the focus mode.
+   *
+   * @param {string} mode - Focus mode name.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
   setFocusMode(mode: string): Promise<any>;
+
+  /**
+   * Locks the camera focus at a specific area within the frame.
+   *
+   * This function instructs the camera to focus on a specific point in the frame,
+   * where `x` and `y` are expressed as percentages (0 to 100) of the frame's width and height.
+   * For example, (50, 50) would lock focus at the center of the frame.
+   *
+   * @param x - The horizontal percentage (0 to 100) representing the focus point in the frame.
+   * @param y - The vertical percentage (0 to 100) representing the focus point in the frame.
+   * @returns A promise that resolves when the focus is successfully locked.
+   */
   lockFocus(x: number, y: number): Promise<any>;
+
+  /**
+   * Captures a photo using provided coordinates.
+   *
+   * @param {number | null} x The x-coordinate (optional).
+   * @param {number | null} y The y-coordinate (optional).
+   * @returns {Promise<any>} A promise resolving with the result of the capture.
+   */
   capturePhoto(x: number | null, y: number | null): Promise<any>;
+
+  /**
+   * Retrieves the current capture settings of the camera.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
+   */
   getCaptureSettings(): Promise<any>;
+
+  /**
+   * Sets the capture settings of the camera.
+   *
+   * @param {Record<string, any>} settings - An object containing the capture settings to be applied.
+   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
+   */
   setCaptureSettings(settings: Record<string, any>): Promise<any>;
+
+  /**
+   * Retrieve all the properties of the device.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
+   */
   getAllProperties(): Promise<any>;
+
+  /**
+   * Force refresh the camera display.
+   * Useful when the camera display is out of sync after changing certain settings.
+   *
+   * Supported device: Ricoh GR II only.
+   *
+   * @returns A promise that resolves once the refresh operation is complete.
+   */
   refreshDisplay(): Promise<any>;
+
+  /**
+   * Send a command to the device.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
+   */
   sendCommand(command: string | GR_COMMANDS): Promise<any>;
 }
 

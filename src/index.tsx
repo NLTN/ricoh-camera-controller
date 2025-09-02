@@ -98,6 +98,11 @@ class RicohCameraController
   // #endregion
 
   // #region Adapter: Event Forwarding
+  /**
+   * Subscribes and forwards all the events from the adapter events to the consumers.
+   *
+   * @param {string[]} events - List of event names to forward (e.g., from CameraEvents).
+   */
   private forwardAdapterEvents(events: string[]) {
     for (const event of events) {
       const handler = (...args: any[]) => {
@@ -108,6 +113,9 @@ class RicohCameraController
     }
   }
 
+  /**
+   * Removes all previously registered adapter event listeners and clears the list.
+   */
   private cleanupListeners() {
     for (const { event, handler } of this.adapterListeners) {
       this.adapter?.off(event, handler);
@@ -138,26 +146,12 @@ class RicohCameraController
   }
   // #endregion
 
-  // #region Getter methods to expose the variables
+  // #region Delegates - Getter methods to expose variables
 
-  /**
-   * Indicates whether a camera is currently connected.
-   * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
-   */
   get isConnected(): boolean {
     return this.adapter !== null && this.adapter.isConnected;
   }
 
-  /**
-   * Retrieves the cached device information.
-   *
-   * This function returns the stored device information, which is intended
-   * to be a cached copy of data fetched from the camera.
-   * Accessing this cache avoids redundant computations or network requests.
-   *
-   * @returns {IDeviceInfo | null} The cached device information. Returns `null` if no
-   * device information is currently cached.
-   */
   get info(): IDeviceInfo | null {
     if (this.adapter === null) {
       return null;
@@ -165,16 +159,6 @@ class RicohCameraController
     return this.adapter.info;
   }
 
-  /**
-   * Retrieves the cached capture settings.
-   *
-   * This function returns the stored capture settings, which are intended
-   * to be a cached copy of settings obtained from the camera.
-   * Accessing this cache avoids redundant computations or external calls.
-   *
-   * @returns {ICaptureSettings | null} The cached capture settings. Returns `null` if no
-   * capture settings are currently cached.
-   */
   get captureSettings(): ICaptureSettings | null {
     if (this.adapter === null) {
       return null;
@@ -184,49 +168,20 @@ class RicohCameraController
 
   // #endregion
 
+  // #region Delegates the command to the detected adapter
+
   getLiveViewURL(): string {
     return this.safeAdapter.getLiveViewURL();
   }
 
-  // #region Camera Status
-  /**
-   * Get camera status
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing camera status.
-   */
   async getStatus(): Promise<any> {
     return this.safeAdapter.getStatus();
   }
-  // #endregion
 
-  // #region Lens Focus Controls
-
-  /**
-   * Locks the camera focus at a specific area within the frame.
-   *
-   * This function instructs the camera to focus on a specific point in the frame,
-   * where `x` and `y` are expressed as percentages (0 to 100) of the frame's width and height.
-   * For example, (50, 50) would lock focus at the center of the frame.
-   *
-   * @param x - The horizontal percentage (0 to 100) representing the focus point in the frame.
-   * @param y - The vertical percentage (0 to 100) representing the focus point in the frame.
-   * @returns A promise that resolves when the focus is successfully locked.
-   */
   async lockFocus(x: number, y: number): Promise<any> {
     return this.safeAdapter.lockFocus(x, y);
   }
 
-  // #endregion
-
-  // #region Capture Controls
-
-  /**
-   * Captures a photo using provided coordinates.
-   *
-   * @param {number | null} x The x-coordinate (optional).
-   * @param {number | null} y The y-coordinate (optional).
-   * @returns {Promise<any>} A promise resolving with the result of the capture.
-   */
   async capturePhoto(
     x: number | null = null,
     y: number | null = null
@@ -234,128 +189,50 @@ class RicohCameraController
     return this.safeAdapter.capturePhoto(x, y);
   }
 
-  // #endregion
-
-  // #region Capture Settings
-  /**
-   * Retrieves the current capture settings of the camera.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
-   */
   async getCaptureSettings(): Promise<any> {
     return this.safeAdapter.getCaptureSettings();
   }
 
-  /**
-   * Sets the capture settings of the camera.
-   *
-   * @param {Record<string, any>} settings - An object containing the capture settings to be applied.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
     return this.safeAdapter.setCaptureSettings(settings);
   }
 
-  /**
-   * Retrieves the list of dial modes of the camera.
-   *
-   * @returns {string[]} The list of focus modes.
-   */
   getDialModeList(): (string | null)[] {
     return this.safeAdapter.getDialModeList();
   }
 
-  /**
-   * Sets the dial mode.
-   *
-   * @param {string} mode - Dial mode name.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   setDialMode(mode: string): Promise<any> {
     return this.safeAdapter.setDialMode(mode);
   }
 
-  /**
-   * Retrieves the list of drive modes of the camera.
-   *
-   * @returns {string[]} The list of drive modes.
-   */
   getDriveModeList(): string[] {
     return this.safeAdapter.getDriveModeList();
   }
 
-  /**
-   * Retrieves the currently selected drive mode.
-   *
-   * @returns The name of the current drive mode (e.g., "single", "continuous").
-   * @throws Error if the shoot mode is not found.
-   */
   getDriveMode(): string {
     return this.safeAdapter.getDriveMode();
   }
 
-  /**
-   * Returns the list of supported self-timer options for the selected drive mode.
-   *
-   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
-   *
-   * Example:
-   * ```ts
-   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
-   * ```
-   */
   getSelfTimerOptionList(): string[] {
     return this.safeAdapter.getSelfTimerOptionList();
   }
 
-  /**
-   * Retrieves the currently selected self-timer option.
-   *
-   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
-   * @throws Error if the shoot mode is not found.
-   */
   getSelfTimerOption(): string {
     return this.safeAdapter.getSelfTimerOption();
   }
 
-  /**
-   * Sets the shoot mode / drive mode / self timer.
-   *
-   * @param {string} driveMode - Drive mode.
-   * @param {string} selfTimerOption - Self-timer option.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
     return this.safeAdapter.setShootMode(driveMode, selfTimerOption);
   }
 
-  /**
-   * Retrieves the list of focus modes of the camera.
-   *
-   * @returns {string[]} The list of focus modes.
-   */
   getFocusModeList() {
     return this.safeAdapter.getFocusModeList();
   }
 
-  /**
-   * Sets the focus mode.
-   *
-   * @param {string} mode - Focus mode name.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   setFocusMode(mode: string): Promise<any> {
     return this.safeAdapter.setFocusMode(mode);
   }
-  // #endregion
 
-  // #region Camera Settings
-
-  /**
-   * Retrieve all the properties of the device.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
-   */
   async getAllProperties(): Promise<any> {
     try {
       const response = await this._apiClient.get('/v1/props');
@@ -364,15 +241,7 @@ class RicohCameraController
       throw error;
     }
   }
-  // #endregion
 
-  // #region Camera Display
-
-  /**
-   * Send a command to the device.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
-   */
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
     try {
       const response = await this._apiClient.post('/_gr', command);
@@ -382,7 +251,6 @@ class RicohCameraController
     }
   }
 
-  // Force refresh the display
   async refreshDisplay(): Promise<any> {
     try {
       const rawData = 'cmd=mode refresh';
@@ -410,42 +278,22 @@ class RicohCameraController
     }
   }
 
-  /**
-   * Starts the polling process to periodically check for updates.
-   */
   startListeningToEvents(): void {
     this.safeAdapter.startListeningToEvents();
   }
 
-  /**
-   * Stops the periodic updates when they are no longer needed.
-   */
   stopListeningToEvents(): void {
     this.safeAdapter.stopListeningToEvents();
   }
 
-  /**
-   * Sets the polling interval for fetching data.
-   * Delegates to the underlying Poller to restart with the new interval if active.
-   *
-   * @param ms - New polling interval in milliseconds
-   */
   setPollInterval(ms: number): void {
     this.safeAdapter.setPollInterval(ms);
   }
 
-  /**
-   * Temporarily changes the polling interval for fetching data
-   * for a fixed number of cycles before reverting to the default.
-   * Delegates to the underlying Poller to restart with the new interval if active.
-   *
-   * @param ms - Temporary polling interval in milliseconds
-   * @param cycles - Number of polling cycles to run at the temporary interval
-   * @throws If `cycles` is not an integer ≥ 1
-   */
   setPollIntervalTemporarily(ms: number, cycles: number): void {
     this.safeAdapter.setPollIntervalTemporarily(ms, cycles);
   }
+
   // #endregion
 }
 
