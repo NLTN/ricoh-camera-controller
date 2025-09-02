@@ -233,6 +233,10 @@ class RicohCameraController
     return this.safeAdapter.setFocusMode(mode);
   }
 
+  getFocusSetting(): string {
+    return this.safeAdapter.getFocusSetting();
+  }
+
   async getAllProperties(): Promise<any> {
     try {
       const response = await this._apiClient.get('/v1/props');

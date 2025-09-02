@@ -192,6 +192,14 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     }
   }
 
+  getFocusSetting() {
+    const value = this._cachedDeviceInfo?.AFMode;
+    if (value !== undefined) {
+      return value;
+    }
+    throw new Error('Focus Setting is not available');
+  }
+
   // #endregion
 
   // #region Others

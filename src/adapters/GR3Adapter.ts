@@ -216,6 +216,15 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       return Promise.reject(new Error('Invalid focus mode'));
     }
   }
+
+  getFocusSetting() {
+    const value = this._cachedDeviceInfo?.focusSetting;
+    if (value !== undefined) {
+      return value;
+    }
+    throw new Error('Focus Setting is not available');
+  }
+
   // #endregion
 
   // #region Others
