@@ -140,6 +140,14 @@ export interface IRicohCameraController extends EventEmitter {
   setFocusMode(mode: string): Promise<any>;
 
   /**
+   * Retrieves the current of focus setting of the camera.
+   * (e.g., "multiauto", "spot", "pinpoint", "snap", "inf").
+   *
+   * @returns {string} The current focus setting.
+   */
+  getFocusSetting(): string;
+
+  /**
    * Locks the camera focus at a specific area within the frame.
    *
    * This function instructs the camera to focus on a specific point in the frame,
@@ -289,7 +297,17 @@ export interface ICaptureSettings {
   stillSize: string;
   movieSize: string;
   focusMode: string;
+
+  /** Focus setting (e.g., "multiauto", "spot", "pinpoint", "snap", "inf").
+   *
+   * Supported devices: GRII*/
   AFMode: string;
+
+  /** Focus setting (e.g., "multiauto", "spot", "pinpoint", "snap", "inf").
+   *
+   * Supported devices: GRIII & GR IIIx */
+  focusSetting: string;
+
   ssid: string;
   key: string;
   channel: number;

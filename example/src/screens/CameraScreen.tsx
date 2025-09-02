@@ -338,6 +338,16 @@ export const CameraScreen = () => {
                 .catch((error) => handleError(error));
             }}
           />
+          <Button
+            title="getFocusSetting()"
+            onPress={() => {
+              try {
+                Alert.alert(camera.getFocusSetting());
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
