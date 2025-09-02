@@ -42,6 +42,7 @@ export const CameraScreen = () => {
         camera.setFocusMode('spot').then(() => camera.refreshDisplay());
       }
     });
+    camera.setPollIntervalTemporarily(800, 2);
   };
   // #endregion
 

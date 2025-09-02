@@ -4,6 +4,8 @@ import type { GR_COMMANDS } from './Constants';
 export interface IRicohCameraController extends EventEmitter {
   startListeningToEvents(): void;
   stopListeningToEvents(): void;
+  setPollInterval(ms: number): void;
+  setPollIntervalTemporarily(ms: number, cycles: number): void;
   get isConnected(): boolean;
   get info(): IDeviceInfo | null;
   get captureSettings(): ICaptureSettings | null;
