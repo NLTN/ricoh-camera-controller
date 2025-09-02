@@ -10,13 +10,14 @@ import type {
 import { findDifferences, hasAnyKey, type Difference } from '../utils';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
+import { Poller } from '../Poller';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
 class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
-  private _intervalId: NodeJS.Timeout | null = null;
+  private _poller: Poller;
   private _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
@@ -38,28 +39,20 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
       timeout: this.DEFAULT_TIMEOUT_MS,
     });
 
-    this.startListeningToEvents();
+    this._poller = new Poller(() => this.fetchData(), 2000);
+    this._poller.start(); // this.startListeningToEvents();
   }
 
   // #region Getter methods to expose the variables
 
-  /**
-   * Indicates whether a camera is currently connected.
-   * @returns {boolean} `true` if a camera is connected. Otherwise, returns `false`
-   */
   get isConnected(): boolean {
     return this._isConnected;
   }
 
   /**
-   * Retrieves the cached device information.
-   *
-   * This function returns the stored device information, which is intended
+   * Returns the stored device information, which is intended
    * to be a cached copy of data fetched from the camera.
    * Accessing this cache avoids redundant computations or network requests.
-   *
-   * @returns {IDeviceInfo | null} The cached device information. Returns `null` if no
-   * device information is currently cached.
    */
   get info(): IDeviceInfo | null {
     return this._cachedDeviceInfo;
@@ -86,11 +79,6 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   // #region Camera Status
-  /**
-   * Get camera status
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing camera status.
-   */
   async getStatus(): Promise<any> {
     const response = await this._apiClient.get('/v1/ping');
     return response.data;
@@ -99,17 +87,6 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Lens Focus Controls
 
-  /**
-   * Locks the camera focus at a specific area within the frame.
-   *
-   * This function instructs the camera to focus on a specific point in the frame,
-   * where `x` and `y` are expressed as percentages (0 to 100) of the frame's width and height.
-   * For example, (50, 50) would lock focus at the center of the frame.
-   *
-   * @param x - The horizontal percentage (0 to 100) representing the focus point in the frame.
-   * @param y - The vertical percentage (0 to 100) representing the focus point in the frame.
-   * @returns A promise that resolves when the focus is successfully locked.
-   */
   async lockFocus(x: number, y: number): Promise<any> {
     // Validation: Value Constraints
     // Throw an error if `x` or `y` is outside the range of 0 to 100.
@@ -146,23 +123,17 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #endregion
 
-  // #region Capture Settings
-  /**
-   * Retrieves the current capture settings of the camera.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing capture settings.
-   */
+  // #region Camera Properties & Settings
+  async getAllProperties(): Promise<any> {
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
+  }
+
   async getCaptureSettings(): Promise<any> {
     const response = await this._apiClient.get('/v1/params');
     return response.data;
   }
 
-  /**
-   * Sets the capture settings of the camera.
-   *
-   * @param {Record<string, any>} settings - An object containing the capture settings to be applied.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   async setCaptureSettings(settings: Record<string, any>): Promise<any> {
     // Convert the object to a query-like string
     const rawData = Object.entries(settings)
@@ -174,98 +145,41 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     return response.data;
   }
 
-  /**
-   * Retrieves the list of dial modes of the camera.
-   *
-   * @returns {string[]} The list of focus modes.
-   */
   getDialModeList(): (string | null)[] {
     return ['Auto', 'P', 'AV', 'TV', 'TAV', 'M', 'MOV', 'MY3', 'MY2', 'MY1'];
   }
 
-  /**
-   * Sets the dial mode.
-   *
-   * @param {string} mode - Dial mode name.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   setDialMode(mode: string): Promise<any> {
     if (mode === 'MOV') mode = 'movie';
     return this.sendCommand(`cmd=bdial ${mode}`);
   }
 
-  /**
-   * Retrieves the list of drive modes of the camera.
-   *
-   * @returns {string[]} The list of drive modes.
-   */
   getDriveModeList() {
     return ['single', 'intervalComp', 'interval', 'continuous', 'bracket'];
   }
 
-  /**
-   * Retrieves the currently selected drive mode.
-   *
-   * @returns The name of the current drive mode (e.g., "single", "continuous").
-   * @throws Error not supported.
-   */
   getDriveMode(): string {
     throw new Error('getDriveMode() is not supported on Ricoh GR II');
   }
 
-  /**
-   * Returns the list of supported self-timer options for the selected drive mode.
-   *
-   * @returns An array of timer option keys (e.g. "off", "2s", "10s") supported by the selected drive mode.
-   * @throws Error not supported.
-   * Example:
-   * ```ts
-   * getSelfTimerOptionList(); // ["off", "2s", "10s"]
-   * ```
-   */
   getSelfTimerOptionList(): string[] {
     throw new Error('getSelfTimerOptionList() is not supported on Ricoh GR II');
   }
 
-  /**
-   * Retrieves the currently selected self-timer option.
-   *
-   * @returns {string} The current self-timer option (e.g., "off", "2s", "10s").
-   * @throws Error not supported.
-   */
   getSelfTimerOption(): string {
     throw new Error('getSelfTimerOption() is not supported on Ricoh GR II');
   }
 
-  /**
-   * Sets the shoot mode / drive mode / self timer.
-   *
-   * @param {string} _driveMode - Drive mode.
-   * @param {string} _selfTimerOption - Self-timer option.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   * @throws Error not supported.
-   */
   setShootMode(_driveMode: string, _selfTimerOption: string): Promise<any> {
     return Promise.reject(
       new Error('setShootMode() is not supported on Ricoh GR II')
     );
   }
 
-  /**
-   * Retrieves the list of focus modes of the camera.
-   *
-   * @returns {string[]} The list of focus modes.
-   */
   getFocusModeList() {
     return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
   }
 
-  /**
-   * Sets the focus mode.
-   *
-   * @param {string} mode - Focus mode name.
-   * @returns {Promise<any>} A promise that resolves when the settings are successfully applied.
-   */
   setFocusMode(mode: string): Promise<any> {
     const command = Object.entries(FOCUS_MODE_TO_COMMAND_MAP).find(
       ([key, _]) => key === mode
@@ -277,34 +191,16 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
       return Promise.reject(new Error('Invalid focus mode'));
     }
   }
+
   // #endregion
 
-  // #region Camera Settings
+  // #region Others
 
-  /**
-   * Retrieve all the properties of the device.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
-   */
-  async getAllProperties(): Promise<any> {
-    const response = await this._apiClient.get('/v1/props');
-    return response.data;
-  }
-  // #endregion
-
-  // #region Camera Display
-
-  /**
-   * Send a command to the device.
-   *
-   * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
-   */
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
     const response = await this._apiClient.post('/_gr', command);
     return response.data;
   }
 
-  // Force refresh the display
   async refreshDisplay(): Promise<any> {
     const rawData = 'cmd=mode refresh';
     const response = await this._apiClient.post('/_gr', rawData);
@@ -378,23 +274,37 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
    * Starts the polling process to periodically check for updates.
    */
   startListeningToEvents(): void {
-    if (this._intervalId == null) {
-      this.fetchData();
-
-      this._intervalId = setInterval(() => {
-        this.fetchData();
-      }, 2000);
-    }
+    this._poller.start();
   }
 
   /**
    * Stops the periodic updates when they are no longer needed.
    */
   stopListeningToEvents(): void {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
-    }
+    this._poller.stop();
+  }
+
+  /**
+   * Sets the polling interval for fetching data.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - New polling interval in milliseconds
+   */
+  setPollInterval(ms: number): void {
+    this._poller.setIntervalMs(ms);
+  }
+
+  /**
+   * Temporarily changes the polling interval for fetching data
+   * for a fixed number of cycles before reverting to the default.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - Temporary polling interval in milliseconds
+   * @param cycles - Number of polling cycles to run at the temporary interval
+   * @throws If `cycles` is not an integer ≥ 1
+   */
+  setPollIntervalTemporarily(ms: number, cycles: number): void {
+    this._poller.setIntervalTemporarily(ms, cycles);
   }
   // #endregion
 }
