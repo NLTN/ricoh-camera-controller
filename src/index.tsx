@@ -423,6 +423,29 @@ class RicohCameraController
   stopListeningToEvents(): void {
     this.safeAdapter.stopListeningToEvents();
   }
+
+  /**
+   * Sets the polling interval for fetching data.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - New polling interval in milliseconds
+   */
+  setPollInterval(ms: number): void {
+    this.safeAdapter.setPollInterval(ms);
+  }
+
+  /**
+   * Temporarily changes the polling interval for fetching data
+   * for a fixed number of cycles before reverting to the default.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - Temporary polling interval in milliseconds
+   * @param cycles - Number of polling cycles to run at the temporary interval
+   * @throws If `cycles` is not an integer ≥ 1
+   */
+  setPollIntervalTemporarily(ms: number, cycles: number): void {
+    this.safeAdapter.setPollIntervalTemporarily(ms, cycles);
+  }
   // #endregion
 }
 

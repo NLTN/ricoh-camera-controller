@@ -389,6 +389,29 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   stopListeningToEvents(): void {
     this._poller.stop();
   }
+
+  /**
+   * Sets the polling interval for fetching data.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - New polling interval in milliseconds
+   */
+  setPollInterval(ms: number): void {
+    this._poller.setIntervalMs(ms);
+  }
+
+  /**
+   * Temporarily changes the polling interval for fetching data
+   * for a fixed number of cycles before reverting to the default.
+   * Delegates to the underlying Poller to restart with the new interval if active.
+   *
+   * @param ms - Temporary polling interval in milliseconds
+   * @param cycles - Number of polling cycles to run at the temporary interval
+   * @throws If `cycles` is not an integer ≥ 1
+   */
+  setPollIntervalTemporarily(ms: number, cycles: number): void {
+    this._poller.setIntervalTemporarily(ms, cycles);
+  }
   // #endregion
 }
 
