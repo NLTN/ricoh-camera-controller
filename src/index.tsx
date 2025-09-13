@@ -207,7 +207,7 @@ class RicohCameraController
     return this.safeAdapter.getDialModeList();
   }
 
-  setDialMode(mode: string): Promise<any> {
+  async setDialMode(mode: string): Promise<any> {
     return this.safeAdapter.setDialMode(mode);
   }
 
@@ -227,7 +227,7 @@ class RicohCameraController
     return this.safeAdapter.getSelfTimerOption();
   }
 
-  setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
+  async setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
     return this.safeAdapter.setShootMode(driveMode, selfTimerOption);
   }
 
@@ -235,7 +235,7 @@ class RicohCameraController
     return this.safeAdapter.getFocusModeList();
   }
 
-  setFocusMode(mode: string): Promise<any> {
+  async setFocusMode(mode: string): Promise<any> {
     return this.safeAdapter.setFocusMode(mode);
   }
 
@@ -249,14 +249,11 @@ class RicohCameraController
   }
 
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
-    const response = await this._apiClient.post('/_gr', command);
-    return response.data;
+    return this.safeAdapter.sendCommand(command);
   }
 
   async refreshDisplay(): Promise<any> {
-    const rawData = 'cmd=mode refresh';
-    const response = await this._apiClient.post('/_gr', rawData);
-    return response.data;
+    return this.safeAdapter.refreshDisplay();
   }
 
   // #endregion
