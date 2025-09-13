@@ -50,22 +50,28 @@ class RicohCameraController
    */
   async detectAndInitialize() {
     if (this.adapter == null) {
-      this.getAllProperties().then((data) => {
-        if ('model' in data) {
-          this.stopCameraDetectionAndPairing();
+      this.getAllProperties()
+        .then((data) => {
+          if ('model' in data) {
+            this.stopCameraDetectionAndPairing();
 
-          const isGR2 = data.model === 'GR II';
+            const isGR2 = data.model === 'GR II';
 
-          this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
+            this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
 
-          this.forwardAdapterEvents(Object.values(CameraEvents));
+            this.forwardAdapterEvents(Object.values(CameraEvents));
 
-          // this.emit(CameraEvents.Connected, data);
-          this.adapter.once(CameraEvents.Disconnected, () => this.reset());
+            // this.emit(CameraEvents.Connected, data);
+            this.adapter.once(CameraEvents.Disconnected, () => this.reset());
 
-          this.adapter.startListeningToEvents();
-        }
-      });
+            this.adapter.startListeningToEvents();
+          }
+        })
+        .catch((error) => {
+          if (!axios.isAxiosError(error)) {
+            throw error;
+          }
+        });
     }
   }
 
@@ -201,7 +207,7 @@ class RicohCameraController
     return this.safeAdapter.getDialModeList();
   }
 
-  setDialMode(mode: string): Promise<any> {
+  async setDialMode(mode: string): Promise<any> {
     return this.safeAdapter.setDialMode(mode);
   }
 
@@ -221,7 +227,7 @@ class RicohCameraController
     return this.safeAdapter.getSelfTimerOption();
   }
 
-  setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
+  async setShootMode(driveMode: string, selfTimerOption: string): Promise<any> {
     return this.safeAdapter.setShootMode(driveMode, selfTimerOption);
   }
 
@@ -229,36 +235,25 @@ class RicohCameraController
     return this.safeAdapter.getFocusModeList();
   }
 
-  setFocusMode(mode: string): Promise<any> {
+  async setFocusMode(mode: string): Promise<any> {
     return this.safeAdapter.setFocusMode(mode);
   }
 
+  getFocusSetting(): string {
+    return this.safeAdapter.getFocusSetting();
+  }
+
   async getAllProperties(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
 
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
-    try {
-      const response = await this._apiClient.post('/_gr', command);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return this.safeAdapter.sendCommand(command);
   }
 
   async refreshDisplay(): Promise<any> {
-    try {
-      const rawData = 'cmd=mode refresh';
-      const response = await this._apiClient.post('/_gr', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return this.safeAdapter.refreshDisplay();
   }
 
   // #endregion

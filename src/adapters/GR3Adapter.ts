@@ -154,7 +154,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     return ['U3', 'U2', 'U1', 'P', 'AV', 'TV', 'M', null];
   }
 
-  setDialMode(mode: string): Promise<any> {
+  async setDialMode(mode: string): Promise<any> {
     return this.sendCommand(`cmd=bdial ${mode}`);
   }
 
@@ -184,7 +184,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     }
   }
 
-  setShootMode<D extends DriveMode, T extends TimerOption<D>>(
+  async setShootMode<D extends DriveMode, T extends TimerOption<D>>(
     driveMode: D,
     selfTimerOption: T
   ): Promise<any> {
@@ -205,7 +205,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
   }
 
-  setFocusMode(mode: string): Promise<any> {
+  async setFocusMode(mode: string): Promise<any> {
     const command = Object.entries(FOCUS_MODE_TO_COMMAND_MAP).find(
       ([key, _]) => key === mode
     );
@@ -216,6 +216,15 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       return Promise.reject(new Error('Invalid focus mode'));
     }
   }
+
+  getFocusSetting() {
+    const value = this._cachedDeviceInfo?.focusSetting;
+    if (value !== undefined) {
+      return value;
+    }
+    throw new Error('Focus Setting is not available');
+  }
+
   // #endregion
 
   // #region Others

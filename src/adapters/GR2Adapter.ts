@@ -149,7 +149,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     return ['Auto', 'P', 'AV', 'TV', 'TAV', 'M', 'MOV', 'MY3', 'MY2', 'MY1'];
   }
 
-  setDialMode(mode: string): Promise<any> {
+  async setDialMode(mode: string): Promise<any> {
     if (mode === 'MOV') mode = 'movie';
     return this.sendCommand(`cmd=bdial ${mode}`);
   }
@@ -170,7 +170,10 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     throw new Error('getSelfTimerOption() is not supported on Ricoh GR II');
   }
 
-  setShootMode(_driveMode: string, _selfTimerOption: string): Promise<any> {
+  async setShootMode(
+    _driveMode: string,
+    _selfTimerOption: string
+  ): Promise<any> {
     return Promise.reject(
       new Error('setShootMode() is not supported on Ricoh GR II')
     );
@@ -180,7 +183,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
   }
 
-  setFocusMode(mode: string): Promise<any> {
+  async setFocusMode(mode: string): Promise<any> {
     const command = Object.entries(FOCUS_MODE_TO_COMMAND_MAP).find(
       ([key, _]) => key === mode
     );
@@ -190,6 +193,14 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     } else {
       return Promise.reject(new Error('Invalid focus mode'));
     }
+  }
+
+  getFocusSetting() {
+    const value = this._cachedDeviceInfo?.AFMode;
+    if (value !== undefined) {
+      return value;
+    }
+    throw new Error('Focus Setting is not available');
   }
 
   // #endregion

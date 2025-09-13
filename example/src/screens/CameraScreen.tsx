@@ -167,7 +167,7 @@ export const CameraScreen = () => {
                 .then((data) => {
                   setTextInputValue(JSON.stringify(data, null, 4));
                 })
-                .catch((error) => setTextInputValue(error));
+                .catch(handleError);
 
               const endTime = performance.now();
               setText(`${endTime - startTime}ms`);
@@ -179,43 +179,43 @@ export const CameraScreen = () => {
           <Button
             title="Capture photo"
             onPress={() => {
-              camera.capturePhoto();
+              camera.capturePhoto().catch(handleError);
             }}
           />
           <Button
             title="lens_focus: 20,20"
             onPress={() => {
-              camera.lockFocus(20, 20);
+              camera.lockFocus(20, 20).catch(handleError);
             }}
           />
           <Button
             title="ISO 400"
             onPress={() => {
-              camera.setCaptureSettings({ sv: 400 });
+              camera.setCaptureSettings({ sv: 400 }).catch(handleError);
             }}
           />
           <Button
             title="ISO auto"
             onPress={() => {
-              camera.setCaptureSettings({ sv: 'auto' });
+              camera.setCaptureSettings({ sv: 'auto' }).catch(handleError);
             }}
           />
           <Button
             title="Shutter Speed: 1/80"
             onPress={() => {
-              camera.setCaptureSettings({ tv: '1.80' });
+              camera.setCaptureSettings({ tv: '1.80' }).catch(handleError);
             }}
           />
           <Button
             title="Shutter Speed: 5s"
             onPress={() => {
-              camera.setCaptureSettings({ tv: '5.1' });
+              camera.setCaptureSettings({ tv: '5.1' }).catch(handleError);
             }}
           />
           <Button
             title="Z-IN"
             onPress={() => {
-              camera.sendCommand(GR_COMMANDS.BUTTON_ZOOM_IN);
+              camera.sendCommand(GR_COMMANDS.BUTTON_ZOOM_IN).catch(handleError);
             }}
           />
         </View>
@@ -241,16 +241,22 @@ export const CameraScreen = () => {
           <Button
             title="xv=+0.3"
             onPress={() => {
-              camera.setCaptureSettings({ xv: '+0.3', sv: '400' });
+              camera
+                .setCaptureSettings({ xv: '+0.3', sv: '400' })
+                .catch(handleError);
             }}
           />
           <Button
             title="FocusModeList"
             onPress={() => {
-              Alert.alert(
-                'List of Focus Modes',
-                camera.getFocusModeList().toString()
-              );
+              try {
+                Alert.alert(
+                  'List of Focus Modes',
+                  camera.getFocusModeList().toString()
+                );
+              } catch (error) {
+                handleError(error);
+              }
             }}
           />
           <Button
@@ -268,7 +274,7 @@ export const CameraScreen = () => {
               camera
                 .setFocusMode('snap')
                 .then(() => Alert.alert('success'))
-                .catch((error) => Alert.alert('ERROR', error.message));
+                .catch(handleError);
             }}
           />
           <Button
@@ -277,7 +283,7 @@ export const CameraScreen = () => {
               camera
                 .setFocusMode('MF')
                 .then(() => Alert.alert('success'))
-                .catch((error) => Alert.alert('ERROR', error.message));
+                .catch(handleError);
             }}
           />
 
@@ -335,7 +341,17 @@ export const CameraScreen = () => {
               camera
                 .setShootMode('continuous', 'off')
                 .then(() => Alert.alert('success'))
-                .catch((error) => handleError(error));
+                .catch(handleError);
+            }}
+          />
+          <Button
+            title="getFocusSetting()"
+            onPress={() => {
+              try {
+                Alert.alert(camera.getFocusSetting());
+              } catch (err) {
+                handleError(err);
+              }
             }}
           />
         </View>
