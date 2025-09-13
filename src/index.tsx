@@ -50,22 +50,28 @@ class RicohCameraController
    */
   async detectAndInitialize() {
     if (this.adapter == null) {
-      this.getAllProperties().then((data) => {
-        if ('model' in data) {
-          this.stopCameraDetectionAndPairing();
+      this.getAllProperties()
+        .then((data) => {
+          if ('model' in data) {
+            this.stopCameraDetectionAndPairing();
 
-          const isGR2 = data.model === 'GR II';
+            const isGR2 = data.model === 'GR II';
 
-          this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
+            this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
 
-          this.forwardAdapterEvents(Object.values(CameraEvents));
+            this.forwardAdapterEvents(Object.values(CameraEvents));
 
-          // this.emit(CameraEvents.Connected, data);
-          this.adapter.once(CameraEvents.Disconnected, () => this.reset());
+            // this.emit(CameraEvents.Connected, data);
+            this.adapter.once(CameraEvents.Disconnected, () => this.reset());
 
-          this.adapter.startListeningToEvents();
-        }
-      });
+            this.adapter.startListeningToEvents();
+          }
+        })
+        .catch((error) => {
+          if (!axios.isAxiosError(error)) {
+            throw error;
+          }
+        });
     }
   }
 
@@ -238,31 +244,19 @@ class RicohCameraController
   }
 
   async getAllProperties(): Promise<any> {
-    try {
-      const response = await this._apiClient.get('/v1/props');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.get('/v1/props');
+    return response.data;
   }
 
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
-    try {
-      const response = await this._apiClient.post('/_gr', command);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this._apiClient.post('/_gr', command);
+    return response.data;
   }
 
   async refreshDisplay(): Promise<any> {
-    try {
-      const rawData = 'cmd=mode refresh';
-      const response = await this._apiClient.post('/_gr', rawData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const rawData = 'cmd=mode refresh';
+    const response = await this._apiClient.post('/_gr', rawData);
+    return response.data;
   }
 
   // #endregion
