@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import type { GR_COMMANDS } from './Constants';
+import type { PhotoSize } from './enums/PhotoSize';
 
 export interface IRicohCameraController extends EventEmitter {
   /**
@@ -207,6 +208,64 @@ export interface IRicohCameraController extends EventEmitter {
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
   sendCommand(command: string | GR_COMMANDS): Promise<any>;
+
+  /**
+   * Retrieves a list of available media files and directories on the camera.
+   *
+   * @returns {Promise<any>} A promise that resolves with an object containing the available media files.
+   */
+  getMediaList(): Promise<any>;
+
+  /**
+   * Retrieves a URL for accessing a compressed photo from the given directory and filename.
+   *
+   * **IMPORTANT NOTES**
+   * - The returned URL will be of a resized JPG photo, not the original full-resolution image.
+   *
+   * **LIMITATIONS**
+   * - For Ricoh GR II cameras, using `PhotoSize.LARGE` is equivalent to using `PhotoSize.SMALL`
+   *    because this camera model does not support generating light-weight large-sized photos.
+   * @param {string} directory - The path to the directory containing the media file.
+   * @param {string} filename - The name of the media file (including extension).
+   * @param {PhotoSize} size - The desired size for the photo ('thumbnail', 'small', or 'large').
+   * @returns {string} A string representing the URL for accessing the resized photo.
+   * 
+   * Example usage:
+   * ```typescript
+    const camera = new RicohCameraController();
+    const imageUrl = camera.getResizedPhotoURL('425_0914', 'R0178820.JPG', PhotoSize.THUMB);
+    console.log(imageUrl); // Output: http://192.168.0.1/v1/photos/425_0914/R0178820.JPG?size=thumb
+   */
+  getResizedPhotoURL(
+    directory: string,
+    filename: string,
+    size: PhotoSize
+  ): string;
+
+  /**
+   * Retrieves the URL for accessing the most recent resized photo in a specific format.
+   *
+   * **IMPORTANT NOTES**
+   * - The returned URL will be of a resized JPG photo, not the original full-resolution image.
+   *
+   * **LIMITATIONS**
+   * - For Ricoh GR II cameras, using `PhotoSize.LARGE` is equivalent to using `PhotoSize.SMALL`
+   *    because this camera model does not support generating light-weight large-sized photos.
+   * @param {PhotoSize} size - The desired size for the photo ('thumbnail', 'small', or 'large').
+   * @returns {string} A string representing the URL for accessing the most recent resized photo.
+   */
+  getMostRecentPhotoURL(size: PhotoSize): Promise<string>;
+
+  /**
+   * Retrieves a URL for accessing an original media file from the given directory and filename.
+   *
+   * **IMPORTANT NOTES**
+   * - The returned URL can be of type JPG, DNG, or video (e.g., MOV).
+   * @param {string} directory - The path to the directory containing the media file.
+   * @param {string} filename - The name of the media file (including extension).
+   * @returns {string} A string representing the URL for accessing the original media file.
+   */
+  getOriginalMediaURL(directory: string, filename: string): string;
 }
 
 export interface IDeviceInfo extends ICaptureSettings {
