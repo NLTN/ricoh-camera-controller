@@ -1,11 +1,10 @@
 /**
- * Represents the size or format of a media file.
+ * Represents the size of a media file.
  *
  * Possible values:
  * - THUMBNAIL: A thumbnail-sized photo (160 x 120).
  * - SMALL: A small-sized photo (720 x 480).
  * - LARGE: A large-sized photo (1920 x 1280).
- * - ORIGINAL: The original media file (could be JPG, RAW, or video).
  */
 export const PhotoSize = {
   /** A thumbnail-sized photo (160 x 120). */
