@@ -11,6 +11,7 @@ import { findDifferences, hasAnyKey, type Difference } from '../utils';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
 import { Poller } from '../Poller';
+import { PhotoSize } from '../enums/PhotoSize';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -205,7 +206,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #endregion
 
-  // #region Others
+  // #region Command
 
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
     const response = await this._apiClient.post('/_gr', command);
@@ -218,6 +219,55 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     return response.data;
   }
 
+  // #endregion
+
+  // #region Media Files: Photos & Videos
+
+  async getMediaList(): Promise<any> {
+    const response = await this._apiClient.get('/v1/photos');
+    if (response.data.errCode === 200) {
+      return response.data;
+    }
+    throw new Error(response.data.errMsg);
+  }
+
+  getResizedPhotoURL(
+    directory: string,
+    filename: string,
+    size: PhotoSize
+  ): string {
+    const url = `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
+
+    switch (size) {
+      case PhotoSize.THUMBNAIL:
+        return `${url}?size=thumb`;
+      case PhotoSize.SMALL:
+        return `${url}?size=view`;
+      case PhotoSize.LARGE:
+        // Same MediaType.SMALL due to the limitation of GR II
+        // This camera model does not support generating light-weight large-sized photos.
+        return `${url}?size=view`;
+    }
+  }
+
+  async getMostRecentPhotoURL(size: PhotoSize): Promise<string> {
+    const url = `${this.BASE_URL}/v1/photos/latest`;
+
+    switch (size) {
+      case PhotoSize.THUMBNAIL:
+        return `${url}?size=thumb`;
+      case PhotoSize.SMALL:
+        return `${url}?size=view`;
+      case PhotoSize.LARGE:
+        // Same MediaType.SMALL due to the limitation of GR II
+        // This camera model does not support generating light-weight large-sized photos.
+        return `${url}?size=view`;
+    }
+  }
+
+  getOriginalMediaURL(directory: string, filename: string): string {
+    return `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
+  }
   // #endregion
 
   // #region Helpers

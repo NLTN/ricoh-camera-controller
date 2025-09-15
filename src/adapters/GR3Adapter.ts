@@ -17,6 +17,7 @@ import {
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
 import { Poller } from '../Poller';
+import { PhotoSize } from '../enums/PhotoSize';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -227,7 +228,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #endregion
 
-  // #region Others
+  // #region Command
 
   async sendCommand(command: string | GR_COMMANDS): Promise<any> {
     const response = await this._apiClient.post('/_gr', command);
@@ -245,6 +246,45 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     );
   }
 
+  // #endregion
+
+  // #region Media Files: Photos & Videos
+
+  async getMediaList(): Promise<any> {
+    const response = await this._apiClient.get('/v1/photos');
+    if (response.data.errCode === 200) {
+      return response.data;
+    }
+    throw new Error(response.data.errMsg);
+  }
+
+  getResizedPhotoURL(
+    directory: string,
+    filename: string,
+    size: PhotoSize
+  ): string {
+    const url = `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
+
+    switch (size) {
+      case PhotoSize.THUMBNAIL:
+        return `${url}?size=thumb`;
+      case PhotoSize.SMALL:
+        return `${url}?size=view`;
+      case PhotoSize.LARGE:
+        return `${url}?size=xs`;
+    }
+  }
+
+  async getMostRecentPhotoURL(size: PhotoSize): Promise<string> {
+    const mediaList = await this.getMediaList();
+    const lastDir = mediaList.dirs[mediaList.dirs.length - 1];
+    const mostRecentFile = lastDir.files[lastDir.files.length - 1];
+    return this.getResizedPhotoURL(lastDir.name, mostRecentFile, size);
+  }
+
+  getOriginalMediaURL(directory: string, filename: string): string {
+    return `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
+  }
   // #endregion
 
   // #region Helpers
