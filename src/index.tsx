@@ -7,10 +7,17 @@ import type {
   IDeviceInfo,
   ICaptureSettings,
   IMediaList,
+  IDir,
 } from './interfaces';
+export type {
+  IRicohCameraController,
+  IDeviceInfo,
+  ICaptureSettings,
+  IMediaList,
+  IDir,
+}; // Explicitly import and re-export it
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
-export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 import { GR2Adapter, GR3Adapter } from './adapters';
 import type { PhotoSize } from './enums/PhotoSize';
 export * from './enums/PhotoSize';
