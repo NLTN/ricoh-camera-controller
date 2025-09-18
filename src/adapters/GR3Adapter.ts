@@ -6,6 +6,7 @@ import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
+  IMediaList,
 } from '../interfaces';
 import { findDifferences, hasAnyKey, type Difference } from '../utils';
 import {
@@ -250,7 +251,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Media Files: Photos & Videos
 
-  async getMediaList(): Promise<any> {
+  async getMediaList(): Promise<IMediaList> {
     const response = await this._apiClient.get('/v1/photos');
     if (response.data.errCode === 200) {
       return response.data;
