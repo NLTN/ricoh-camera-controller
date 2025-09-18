@@ -6,11 +6,14 @@ import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
+  IMediaList,
 } from './interfaces';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 import { GR2Adapter, GR3Adapter } from './adapters';
+import type { PhotoSize } from './enums/PhotoSize';
+export * from './enums/PhotoSize';
 
 interface IAdapterListener {
   event: string;
@@ -256,6 +259,21 @@ class RicohCameraController
     return this.safeAdapter.refreshDisplay();
   }
 
+  async getMediaList(): Promise<IMediaList> {
+    return this.safeAdapter.getMediaList();
+  }
+
+  getResizedPhotoURL(
+    directory: string,
+    filename: string,
+    size: PhotoSize
+  ): string {
+    return this.safeAdapter.getResizedPhotoURL(directory, filename, size);
+  }
+
+  getOriginalMediaURL(directory: string, filename: string): string {
+    return this.safeAdapter.getOriginalMediaURL(directory, filename);
+  }
   // #endregion
 
   // #region Other Functions

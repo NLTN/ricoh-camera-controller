@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   View,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useCameraController } from '../CameraControllerContext';
 import { CameraEvents, type IDeviceInfo } from 'ricoh-camera-controller';
@@ -24,6 +25,7 @@ export const CameraScreen = () => {
   // #region 🔍 Refs
   const cameraDisplayRef = useRef<CameraDisplay>(null);
   const textInputRef = useRef<TextInput>(null);
+  const imageRef = useRef<Image>(null);
   // #endregion
 
   // #region Layout
@@ -52,7 +54,7 @@ export const CameraScreen = () => {
     camera.startListeningToEvents();
 
     setTimeout(() => {
-      cameraDisplayRef.current?.setURL(camera.getLiveViewURL());
+      // cameraDisplayRef.current?.setURL(camera.getLiveViewURL());
     }, 500);
   };
 
@@ -352,6 +354,75 @@ export const CameraScreen = () => {
               } catch (err) {
                 handleError(err);
               }
+            }}
+          />
+          <Button
+            title="getMediaList()"
+            onPress={() => {
+              try {
+                camera
+                  .getMediaList()
+                  .then((data) => {
+                    Alert.alert(JSON.stringify(data, null, 2));
+                  })
+                  .catch(handleError);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Image ref={imageRef} />
+          <Button
+            title="getResizedPhotoURL('402_0801', 'R0178596.JPG', 'large')"
+            onPress={() => {
+              try {
+                const mediaURL = camera.getResizedPhotoURL(
+                  '402_0801',
+                  'R0178596.JPG',
+                  'large'
+                );
+
+                imageRef.current?.setNativeProps({
+                  source: [{ uri: mediaURL }],
+                  style: [{ width: 400, height: 300 }],
+                });
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+          <Button
+            title="getOriginalMediaURL('402_0801', 'R0178596.JPG')"
+            onPress={() => {
+              try {
+                const mediaURL = camera.getOriginalMediaURL(
+                  '402_0801',
+                  'R0178596.JPG'
+                );
+
+                imageRef.current?.setNativeProps({
+                  source: [{ uri: mediaURL }],
+                  style: [{ width: 400, height: 300 }],
+                });
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="getMostRecentPhotoURL('large')"
+            onPress={() => {
+              // camera
+              //   .getMostRecentPhotoURL('large')
+              //   .then((mediaURL) => {
+              //     imageRef.current?.setNativeProps({
+              //       source: [{ uri: mediaURL }],
+              //       style: [{ width: 400, height: 300 }],
+              //     });
+              //   })
+              //   .catch(handleError);
             }}
           />
         </View>
