@@ -250,24 +250,10 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     }
   }
 
-  async getMostRecentPhotoURL(size: PhotoSize): Promise<string> {
-    const url = `${this.BASE_URL}/v1/photos/latest`;
-
-    switch (size) {
-      case PhotoSize.THUMBNAIL:
-        return `${url}?size=thumb`;
-      case PhotoSize.SMALL:
-        return `${url}?size=view`;
-      case PhotoSize.LARGE:
-        // Same MediaType.SMALL due to the limitation of GR II
-        // This camera model does not support generating light-weight large-sized photos.
-        return `${url}?size=view`;
-    }
-  }
-
   getOriginalMediaURL(directory: string, filename: string): string {
     return `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
   }
+
   // #endregion
 
   // #region Helpers

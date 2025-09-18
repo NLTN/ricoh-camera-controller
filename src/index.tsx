@@ -270,10 +270,6 @@ class RicohCameraController
     return this.safeAdapter.getResizedPhotoURL(directory, filename, size);
   }
 
-  getMostRecentPhotoURL(size: PhotoSize): Promise<string> {
-    return this.safeAdapter.getMostRecentPhotoURL(size);
-  }
-
   getOriginalMediaURL(directory: string, filename: string): string {
     return this.safeAdapter.getOriginalMediaURL(directory, filename);
   }

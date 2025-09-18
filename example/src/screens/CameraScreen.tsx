@@ -414,15 +414,15 @@ export const CameraScreen = () => {
           <Button
             title="getMostRecentPhotoURL('large')"
             onPress={() => {
-              camera
-                .getMostRecentPhotoURL('large')
-                .then((mediaURL) => {
-                  imageRef.current?.setNativeProps({
-                    source: [{ uri: mediaURL }],
-                    style: [{ width: 400, height: 300 }],
-                  });
-                })
-                .catch(handleError);
+              // camera
+              //   .getMostRecentPhotoURL('large')
+              //   .then((mediaURL) => {
+              //     imageRef.current?.setNativeProps({
+              //       source: [{ uri: mediaURL }],
+              //       style: [{ width: 400, height: 300 }],
+              //     });
+              //   })
+              //   .catch(handleError);
             }}
           />
         </View>

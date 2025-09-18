@@ -243,20 +243,6 @@ export interface IRicohCameraController extends EventEmitter {
   ): string;
 
   /**
-   * Retrieves the URL for accessing the most recent resized photo in a specific format.
-   *
-   * **IMPORTANT NOTES**
-   * - The returned URL will be of a resized JPG photo, not the original full-resolution image.
-   *
-   * **LIMITATIONS**
-   * - For Ricoh GR II cameras, using `PhotoSize.LARGE` is equivalent to using `PhotoSize.SMALL`
-   *    because this camera model does not support generating light-weight large-sized photos.
-   * @param {PhotoSize} size - The desired size for the photo ('thumbnail', 'small', or 'large').
-   * @returns {string} A string representing the URL for accessing the most recent resized photo.
-   */
-  getMostRecentPhotoURL(size: PhotoSize): Promise<string>;
-
-  /**
    * Retrieves a URL for accessing an original media file from the given directory and filename.
    *
    * **IMPORTANT NOTES**

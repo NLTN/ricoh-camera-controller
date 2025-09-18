@@ -275,16 +275,10 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     }
   }
 
-  async getMostRecentPhotoURL(size: PhotoSize): Promise<string> {
-    const mediaList = await this.getMediaList();
-    const lastDir = mediaList.dirs[mediaList.dirs.length - 1];
-    const mostRecentFile = lastDir.files[lastDir.files.length - 1];
-    return this.getResizedPhotoURL(lastDir.name, mostRecentFile, size);
-  }
-
   getOriginalMediaURL(directory: string, filename: string): string {
     return `${this.BASE_URL}/v1/photos/${directory}/${filename}`;
   }
+
   // #endregion
 
   // #region Helpers
