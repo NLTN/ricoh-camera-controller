@@ -6,6 +6,7 @@ import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
+  IMediaList,
 } from './interfaces';
 import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
@@ -258,7 +259,7 @@ class RicohCameraController
     return this.safeAdapter.refreshDisplay();
   }
 
-  async getMediaList(): Promise<any> {
+  async getMediaList(): Promise<IMediaList> {
     return this.safeAdapter.getMediaList();
   }
 

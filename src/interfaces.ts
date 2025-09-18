@@ -358,3 +358,28 @@ export interface ICaptureSettings {
   channel: number;
   //   datetime: string; // ISO 8601 formatted date-time string
 }
+
+/**
+ * Represents a single Directory.
+ *
+ * @property {string} name - The name of the directory.
+ * @property {string[]} files - An array of file names in the directory.
+ */
+export interface IDir {
+  /** The name of the directory. */
+  name: string;
+
+  /**  An array of file names in the directory. */
+  files: string[];
+}
+
+/**
+ * Represents a list of media directories.
+ * Each directory in this list contains a list of media files.
+ *
+ * @property {IDir[]} dirs - An array of directory objects.
+ */
+export interface IMediaList {
+  /**  An array of directory objects. */
+  dirs: IDir[];
+}
