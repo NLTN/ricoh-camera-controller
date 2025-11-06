@@ -1,4 +1,5 @@
 import type { ICaptureSettings } from './ICaptureSettings';
+import type { IStorage } from './IStorage';
 
 export interface IDeviceInfo extends ICaptureSettings {
   /** List of resolutions. */
@@ -66,6 +67,9 @@ export interface IDeviceInfo extends ICaptureSettings {
 
   /** Battery level, represented as a value ranging from 0 to 100. */
   battery: number;
+
+  /** List storage devices attached to the camera. */
+  storages: IStorage[];
 
   /** Camera Orientation values: positive, vertical_left, vertical_right, reverse.
    *
