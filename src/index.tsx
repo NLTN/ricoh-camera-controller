@@ -6,6 +6,7 @@ import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
+  IStorage,
   IMediaList,
   IDir,
 } from './interfaces';
@@ -13,6 +14,7 @@ export type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
+  IStorage,
   IMediaList,
   IDir,
 }; // Explicitly import and re-export it
