@@ -47,16 +47,12 @@ export const findDifferences = (
   const keys = new Set([...Object.keys(obj1), ...Object.keys(obj2)]);
 
   keys.forEach((key) => {
-    if (excludedKeys.includes(key) === false) {
-      if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {
-        if (arraysEqual(obj1[key], obj2[key]) === false) {
-          differences[key] = { obj1: obj1[key], obj2: obj2[key] };
-          ++size; // Increase the count of differences
-        }
-      } else if (obj1[key] !== obj2[key]) {
-        differences[key] = { obj1: obj1[key], obj2: obj2[key] };
-        ++size; // Increase the count of differences
-      }
+    if (
+      excludedKeys.includes(key) === false &&
+      deepEqual(obj1[key], obj2[key]) === false
+    ) {
+      differences[key] = { obj1: obj1[key], obj2: obj2[key] };
+      ++size; // Increase the count of differences
     }
   });
 
