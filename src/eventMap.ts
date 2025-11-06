@@ -34,4 +34,5 @@ export const EVENT_KEY_MAP: EventKeyMap = {
     'focusMode',
     'AFMode',
   ]),
+  StorageChanged: new Set(['storages']),
 } as const;
