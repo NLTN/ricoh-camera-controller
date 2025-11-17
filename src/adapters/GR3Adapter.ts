@@ -204,7 +204,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   getFocusModeList() {
-    return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
+    const focusModes = this._cachedDeviceInfo?.focusSettingList;
+    return focusModes !== undefined ? focusModes : [];
   }
 
   async setFocusMode(mode: string): Promise<any> {
