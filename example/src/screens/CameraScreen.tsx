@@ -93,6 +93,17 @@ export const CameraScreen = () => {
     }
   };
 
+  const handleStorageChanged = (
+    data: IDeviceInfo,
+    differences: Record<string, Difference>
+  ) => {
+    if (data) {
+      setTextCaptureSettings(`${performance.now()}`);
+      setTextInputValue(JSON.stringify(differences, null, 2));
+      Alert.alert('Storage Changed', JSON.stringify(differences, null, 2));
+    }
+  };
+
   // #endregion
 
   useEventListener(camera, CameraEvents.Connected, handleCameraConnected);
@@ -103,12 +114,12 @@ export const CameraScreen = () => {
     handleCaptureSettingsChanged
   );
   useEventListener(camera, CameraEvents.FocusChanged, handleFocusChanged);
-
   useEventListener(
     camera,
     CameraEvents.OrientationChanged,
     handleCameraOrientationChanged
   );
+  useEventListener(camera, CameraEvents.StorageChanged, handleStorageChanged);
 
   function handleError(error: unknown, title = 'Error') {
     if (error instanceof Error) {

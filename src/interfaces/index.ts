@@ -3,3 +3,4 @@ export type { ICaptureSettings } from './ICaptureSettings';
 export type { IDeviceInfo } from './IDeviceInfo';
 export type { IDir } from './IDir';
 export type { IMediaList } from './IMediaList';
+export type { IStorage } from './IStorage';

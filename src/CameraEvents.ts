@@ -5,5 +5,5 @@ export enum CameraEvents {
   CaptureSettingsChanged = 'captureSettingsChanged',
   FocusChanged = 'focusChanged',
   OrientationChanged = 'orientationChanged',
-  ImageStored = 'imageStored',
+  StorageChanged = 'storageChanged',
 }

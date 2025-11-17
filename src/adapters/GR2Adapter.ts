@@ -259,13 +259,19 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Helpers
   private dispatchChangedEvents(differences: Record<string, Difference>) {
-    // Event: Capture settings change
+    // Event: Capture Settings Changed
     if (hasAnyKey(differences, EVENT_KEY_MAP.CaptureSettingsChanged)) {
       this.emit(CameraEvents.CaptureSettingsChanged, this.info, differences);
     }
-    // Event: Lens focus change
+
+    // Event: Lens Focus Changed
     if (hasAnyKey(differences, EVENT_KEY_MAP.FocusChanged)) {
       this.emit(CameraEvents.FocusChanged, this.info, differences);
+    }
+
+    // Event: Storage Changed
+    if (hasAnyKey(differences, EVENT_KEY_MAP.StorageChanged)) {
+      this.emit(CameraEvents.StorageChanged, this.info, differences);
     }
 
     // Event: Camera orientation change
@@ -289,7 +295,6 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
           // Compare and raise an event if there is a change
           const result = findDifferences(this._cachedDeviceInfo ?? {}, data, [
             'datetime',
-            'storages',
           ]);
           if (result.size > 0) {
             this._cachedDeviceInfo = data;
