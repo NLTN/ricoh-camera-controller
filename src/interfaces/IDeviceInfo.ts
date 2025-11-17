@@ -59,6 +59,13 @@ export interface IDeviceInfo extends ICaptureSettings {
   /** Current state (e.g., "Idle"). */
   state: string;
 
+  /**
+   * List of Focus Modes (e.g. manual, spot, pinpoint)
+   *
+   * Supported cameras: GR III, GR IIIx
+   */
+  focusSettingList: string[];
+
   /** Indicates whether the element is focused. */
   focused: boolean;
 
