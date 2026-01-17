@@ -12,7 +12,11 @@ import {
   Image,
 } from 'react-native';
 import { useCameraController } from '../CameraControllerContext';
-import { CameraEvents, type IDeviceInfo } from 'ricoh-camera-controller';
+import {
+  CameraEvents,
+  OperationMode,
+  type IDeviceInfo,
+} from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
 import { GR_COMMANDS } from 'ricoh-camera-controller';
 import type { Difference } from '../../../src/utils';
@@ -377,6 +381,28 @@ export const CameraScreen = () => {
                     Alert.alert(JSON.stringify(data, null, 2));
                   })
                   .catch(handleError);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="setOperationMode(capture)"
+            onPress={async () => {
+              try {
+                await camera.setOperationMode(OperationMode.CAPTURE);
+              } catch (err) {
+                handleError(err);
+              }
+            }}
+          />
+
+          <Button
+            title="setOperationMode(playback)"
+            onPress={async () => {
+              try {
+                await camera.setOperationMode(OperationMode.PLAYBACK);
               } catch (err) {
                 handleError(err);
               }
