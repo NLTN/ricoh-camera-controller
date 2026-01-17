@@ -13,6 +13,10 @@ import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
 import { Poller } from '../Poller';
 import { PhotoSize } from '../enums/PhotoSize';
+import {
+  OperationMode,
+  type WritableOperationMode,
+} from '../enums/OperationMode';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -85,6 +89,29 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
     const response = await this._apiClient.get('/v1/ping');
     return response.data;
   }
+  // #endregion
+
+  // #region Device Management
+
+  async setOperationMode(mode: WritableOperationMode): Promise<void> {
+    if (mode === OperationMode.CAPTURE) {
+      // Send a command to half-tap (half-press and release) the shutter button
+      return this.sendCommand('cmd=brl 1 0');
+    } else if (mode === OperationMode.PLAYBACK) {
+      // Lock & then unlock the lens to retract the lens
+      // and enter playback mode without using the play button.
+      //
+      // ----- Why not use the play button? ----
+      // Sending a command to press the play button `this.sendCommand('cmd=bplay')`
+      // might result in powering off the camera
+      // because pressing the play button twice means powering off in some cases
+      await this.sendCommand('pset=LENS_LOCK 1').then(() =>
+        this.sendCommand('pset=LENS_LOCK 0')
+      );
+      return Promise.resolve();
+    }
+  }
+
   // #endregion
 
   // #region Lens Focus Controls
