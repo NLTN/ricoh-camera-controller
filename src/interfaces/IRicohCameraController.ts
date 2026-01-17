@@ -3,6 +3,7 @@ import type { IDeviceInfo } from './IDeviceInfo';
 import type { ICaptureSettings } from './ICaptureSettings';
 import type { GR_COMMANDS } from '../Constants';
 import type { PhotoSize } from '../enums/PhotoSize';
+import type { WritableOperationMode } from '../enums/OperationMode';
 
 export interface IRicohCameraController extends EventEmitter {
   /**
@@ -67,6 +68,21 @@ export interface IRicohCameraController extends EventEmitter {
    * @returns {Promise<any>} A promise that resolves with an object containing camera status.
    */
   getStatus(): Promise<any>;
+
+  /**
+   * Sets the camera operation mode.
+   *
+   * @param mode - The target operation mode to switch to
+   * @returns Promise resolving to the API response data
+   * @throws Error if the API request fails or the mode is invalid
+   *
+   * **Example usage:**
+   * ```typescript
+   * // Switch to capture mode
+   * await setOperationMode(OperationMode.CAPTURE);
+   * ```
+   */
+  setOperationMode(mode: WritableOperationMode): Promise<void>;
 
   /**
    * Retrieves the list of dial modes of the camera.

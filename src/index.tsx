@@ -22,6 +22,11 @@ import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 import { GR2Adapter, GR3Adapter } from './adapters';
 import type { PhotoSize } from './enums/PhotoSize';
+import {
+  OperationMode,
+  type WritableOperationMode,
+} from './enums/OperationMode';
+export { OperationMode };
 export * from './enums/PhotoSize';
 
 interface IAdapterListener {
@@ -194,6 +199,10 @@ class RicohCameraController
 
   async getStatus(): Promise<any> {
     return this.safeAdapter.getStatus();
+  }
+
+  setOperationMode(mode: WritableOperationMode): Promise<void> {
+    return this.safeAdapter.setOperationMode(mode);
   }
 
   async lockFocus(x: number, y: number): Promise<any> {

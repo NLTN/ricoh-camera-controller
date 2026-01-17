@@ -19,6 +19,7 @@ import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
 import { EVENT_KEY_MAP } from '../eventMap';
 import { Poller } from '../Poller';
 import { PhotoSize } from '../enums/PhotoSize';
+import type { WritableOperationMode } from '../enums/OperationMode';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -90,6 +91,16 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     const response = await this._apiClient.get('/v1/ping');
     return response.data;
   }
+  // #endregion
+
+  // #region Device Management
+
+  async setOperationMode(mode: WritableOperationMode): Promise<void> {
+    const rawData = `operationMode=${mode}`;
+    const response = await this._apiClient.put('/v1/params/device', rawData);
+    return response.data;
+  }
+
   // #endregion
 
   // #region Lens Focus Controls
