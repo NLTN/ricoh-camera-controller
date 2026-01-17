@@ -26,7 +26,7 @@ import {
   OperationMode,
   type WritableOperationMode,
 } from './enums/OperationMode';
-export { OperationMode };
+export { OperationMode, type WritableOperationMode };
 export * from './enums/PhotoSize';
 
 interface IAdapterListener {
