@@ -6,32 +6,7 @@ import type { PhotoSize } from '../enums/PhotoSize';
 import type { WritableOperationMode } from '../enums/OperationMode';
 
 export interface IRicohCameraController extends EventEmitter {
-  /**
-   * Starts the polling process to periodically check for updates.
-   */
-  startListeningToEvents(): void;
-
-  /**
-   * Stops the periodic updates when they are no longer needed.
-   */
-  stopListeningToEvents(): void;
-
-  /**
-   * Sets the polling interval for fetching data.
-   *
-   * @param ms - New polling interval in milliseconds
-   */
-  setPollInterval(ms: number): void;
-
-  /**
-   * Temporarily changes the polling interval for fetching data
-   * for a fixed number of cycles before reverting to the default.
-   *
-   * @param ms - Temporary polling interval in milliseconds
-   * @param cycles - Number of polling cycles to run at the temporary interval
-   * @throws If `cycles` is not an integer ≥ 1
-   */
-  setPollIntervalTemporarily(ms: number, cycles: number): void;
+  // #region Data
 
   /**
    * Indicates whether a camera is currently connected.
@@ -55,12 +30,9 @@ export interface IRicohCameraController extends EventEmitter {
    */
   get captureSettings(): ICaptureSettings | null;
 
-  /**
-   * Returns the URL for the live view stream.
-   *
-   * @returns {string} The full URL for accessing the live view endpoint.
-   */
-  getLiveViewURL(): string;
+  // #endregion
+
+  // #region Device Management
 
   /**
    * Get camera status
@@ -83,6 +55,25 @@ export interface IRicohCameraController extends EventEmitter {
    * ```
    */
   setOperationMode(mode: WritableOperationMode): Promise<void>;
+
+  /**
+   * Turns off the camera.
+   *
+   * @returns Promise resolving to void when the camera has been turned off
+   * @throws Error if the API request fails
+   */
+  turnOff(): Promise<void>;
+
+  // #endregion
+
+  // #region Camera Functions
+
+  /**
+   * Returns the URL for the live view stream.
+   *
+   * @returns {string} The full URL for accessing the live view endpoint.
+   */
+  getLiveViewURL(): string;
 
   /**
    * Retrieves the list of dial modes of the camera.
@@ -270,4 +261,37 @@ export interface IRicohCameraController extends EventEmitter {
    * @returns {string} A string representing the URL for accessing the original media file.
    */
   getOriginalMediaURL(directory: string, filename: string): string;
+
+  // #endregion
+
+  // #region Polling Functions
+
+  /**
+   * Starts the polling process to periodically check for updates.
+   */
+  startListeningToEvents(): void;
+
+  /**
+   * Stops the periodic updates when they are no longer needed.
+   */
+  stopListeningToEvents(): void;
+
+  /**
+   * Sets the polling interval for fetching data.
+   *
+   * @param ms - New polling interval in milliseconds
+   */
+  setPollInterval(ms: number): void;
+
+  /**
+   * Temporarily changes the polling interval for fetching data
+   * for a fixed number of cycles before reverting to the default.
+   *
+   * @param ms - Temporary polling interval in milliseconds
+   * @param cycles - Number of polling cycles to run at the temporary interval
+   * @throws If `cycles` is not an integer ≥ 1
+   */
+  setPollIntervalTemporarily(ms: number, cycles: number): void;
+
+  // #endregion
 }
