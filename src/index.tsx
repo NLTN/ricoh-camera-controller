@@ -26,7 +26,7 @@ import {
   OperationMode,
   type WritableOperationMode,
 } from './enums/OperationMode';
-export { OperationMode };
+export { OperationMode, type WritableOperationMode };
 export * from './enums/PhotoSize';
 
 interface IAdapterListener {
@@ -169,7 +169,7 @@ class RicohCameraController
   }
   // #endregion
 
-  // #region Delegates - Getter methods to expose variables
+  // #region Delegation: - Data
 
   get isConnected(): boolean {
     return this.adapter !== null && this.adapter.isConnected;
@@ -191,11 +191,7 @@ class RicohCameraController
 
   // #endregion
 
-  // #region Delegates the command to the detected adapter
-
-  getLiveViewURL(): string {
-    return this.safeAdapter.getLiveViewURL();
-  }
+  // #region Delegation: Device Management
 
   async getStatus(): Promise<any> {
     return this.safeAdapter.getStatus();
@@ -203,6 +199,18 @@ class RicohCameraController
 
   setOperationMode(mode: WritableOperationMode): Promise<void> {
     return this.safeAdapter.setOperationMode(mode);
+  }
+
+  turnOff(): Promise<void> {
+    return this.safeAdapter.turnOff();
+  }
+
+  // #endregion
+
+  // #region Delegation: Camera Functions
+
+  getLiveViewURL(): string {
+    return this.safeAdapter.getLiveViewURL();
   }
 
   async lockFocus(x: number, y: number): Promise<any> {
@@ -292,6 +300,7 @@ class RicohCameraController
   getOriginalMediaURL(directory: string, filename: string): string {
     return this.safeAdapter.getOriginalMediaURL(directory, filename);
   }
+
   // #endregion
 
   // #region Other Functions
@@ -308,6 +317,10 @@ class RicohCameraController
       this.emit(CameraEvents.Disconnected);
     }
   }
+
+  // #endregion
+
+  // #region Polling Functions
 
   startListeningToEvents(): void {
     this.safeAdapter.startListeningToEvents();

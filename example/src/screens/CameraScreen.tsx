@@ -462,6 +462,12 @@ export const CameraScreen = () => {
               //   .catch(handleError);
             }}
           />
+          <Button
+            title="Turn Off"
+            onPress={() => {
+              camera.turnOff().catch(handleError);
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

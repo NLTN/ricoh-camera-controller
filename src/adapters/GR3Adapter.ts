@@ -52,7 +52,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     this._poller.start(); // this.startListeningToEvents();
   }
 
-  // #region Getter methods to expose the variables
+  // #region Data
   get isConnected(): boolean {
     return this._isConnected;
   }
@@ -82,23 +82,33 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   // #endregion
 
-  getLiveViewURL(): string {
-    return `${this.BASE_URL}/v1/liveview`;
-  }
+  // #region Device Management
 
-  // #region Camera Status
   async getStatus(): Promise<any> {
     const response = await this._apiClient.get('/v1/ping');
     return response.data;
   }
-  // #endregion
-
-  // #region Device Management
 
   async setOperationMode(mode: WritableOperationMode): Promise<void> {
     const rawData = `operationMode=${mode}`;
     const response = await this._apiClient.put('/v1/params/device', rawData);
     return response.data;
+  }
+
+  async turnOff(): Promise<void> {
+    const response = await this._apiClient.post('/v1/device/finish');
+    if (response.data.errCode === 200) {
+      return response.data;
+    }
+    throw new Error(response.data.errMsg);
+  }
+
+  // #endregion
+
+  // #region Live View
+
+  getLiveViewURL(): string {
+    return `${this.BASE_URL}/v1/liveview`;
   }
 
   // #endregion
