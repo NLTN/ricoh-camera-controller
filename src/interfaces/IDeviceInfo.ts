@@ -94,7 +94,7 @@ export interface IDeviceInfo extends ICaptureSettings {
    *
    * Supported cameras: GR III series, GR IV series.
    */
-  operationMode: string[];
+  operationMode: string;
 
   /** Indicates whether the camera is currently capturing.
    *
