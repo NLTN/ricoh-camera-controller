@@ -26,10 +26,10 @@ export interface IDeviceInfo extends ICaptureSettings {
   /** Movie sizes */
   movieSizeList: string[];
 
-  /** Model (e.g., "GR II", "GR III")*/
+  /** Model (e.g., "GR II", "GR III") */
   model: string;
 
-  /** Firmware Version (e.g., "03.00")*/
+  /** Firmware Version (e.g., "03.00") */
   firmwareVersion: string;
 
   /** MAC Address */
@@ -41,7 +41,7 @@ export interface IDeviceInfo extends ICaptureSettings {
   /** List of WiFi channels. */
   channelList: number[];
 
-  /** List of aperture values (e.g., "2.8", "4.0")  */
+  /** List of aperture values (e.g., "2.8", "4.0") */
   avList: string[];
 
   /** List of time values, also referred to as Shutter Speeds. */
@@ -62,7 +62,7 @@ export interface IDeviceInfo extends ICaptureSettings {
   /**
    * List of Focus Modes (e.g. manual, spot, pinpoint)
    *
-   * Supported cameras: GR III, GR IIIx
+   * Supported cameras: GR III series, GR IV series.
    */
   focusSettingList: string[];
 
@@ -80,7 +80,25 @@ export interface IDeviceInfo extends ICaptureSettings {
 
   /** Camera Orientation values: positive, vertical_left, vertical_right, reverse.
    *
-   * Supported cameras: GR III, GR IIIx
+   * Supported cameras: GR III series, GR IV series.
    */
   cameraOrientation: string;
+
+  /** List of Operation Modes (e.g. capture, playback, bleStartup, other, powerOffTransfer).
+   *
+   * Supported cameras: GR III series, GR IV series.
+   */
+  operationModeList: string[];
+
+  /** The current Operation Mode (e.g. capture, playback, bleStartup, other, powerOffTransfer).
+   *
+   * Supported cameras: GR III series, GR IV series.
+   */
+  operationMode: string;
+
+  /** Indicates whether the camera is currently capturing.
+   *
+   * Supported cameras: GR III series, GR IV series.
+   */
+  capturing: boolean;
 }
