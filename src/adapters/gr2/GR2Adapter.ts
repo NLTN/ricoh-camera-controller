@@ -1,29 +1,30 @@
 import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
-import { CameraEvents } from '../CameraEvents';
+import { CameraEvents } from '../../core/enums/CameraEvents';
 export { CameraEvents }; // Explicitly import and re-export it
 import type {
   IRicohCameraController,
   IDeviceInfo,
   ICaptureSettings,
   IMediaList,
-} from '../interfaces';
-import { findDifferences, hasAnyKey, type Difference } from '../utils';
+} from '../../core/interfaces';
 import {
-  shootModeLookup,
-  shootModeReverseMap,
-  type DriveMode,
-  type TimerOption,
-} from '../GR3/shootModeLookup';
-import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from '../Constants';
-import { EVENT_KEY_MAP } from '../eventMap';
-import { Poller } from '../Poller';
-import { PhotoSize } from '../enums/PhotoSize';
-import type { WritableOperationMode } from '../enums/OperationMode';
+  findDifferences,
+  hasAnyKey,
+  type Difference,
+} from '../../shared/utils/ObjectComparison';
+import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './constants';
+import { EVENT_KEY_MAP } from '../../core/constants/EventMap';
+import { Poller } from '../../shared/infrastructure/Poller';
+import { PhotoSize } from '../../core/enums/PhotoSize';
+import {
+  OperationMode,
+  type WritableOperationMode,
+} from '../../core/enums/OperationMode';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
-class GR3Adapter extends EventEmitter implements IRicohCameraController {
+class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
   private _poller: Poller;
@@ -53,6 +54,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   // #region Data
+
   get isConnected(): boolean {
     return this._isConnected;
   }
@@ -90,9 +92,22 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   async setOperationMode(mode: WritableOperationMode): Promise<void> {
-    const rawData = `operationMode=${mode}`;
-    const response = await this._apiClient.put('/v1/params/device', rawData);
-    return response.data;
+    if (mode === OperationMode.CAPTURE) {
+      // Send a command to half-tap (half-press and release) the shutter button
+      return this.sendCommand('cmd=brl 1 0');
+    } else if (mode === OperationMode.PLAYBACK) {
+      // Lock & then unlock the lens to retract the lens
+      // and enter playback mode without using the play button.
+      //
+      // ----- Why not use the play button? ----
+      // Sending a command to press the play button `this.sendCommand('cmd=bplay')`
+      // might result in powering off the camera
+      // because pressing the play button twice means powering off in some cases
+      await this.sendCommand('pset=LENS_LOCK 1').then(() =>
+        this.sendCommand('pset=LENS_LOCK 0')
+      );
+      return Promise.resolve();
+    }
   }
 
   async turnOff(): Promise<void> {
@@ -130,7 +145,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
     // Send request
     const rawData = `pos=${x},${y}`;
-    const response = await this._apiClient.post('/v1/lens/focus', rawData);
+    const response = await this._apiClient.post('/v1/lens/focus/lock', rawData);
     return response.data;
   }
 
@@ -140,7 +155,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
 
   async capturePhoto(x: number | null, y: number | null): Promise<any> {
     if (x != null && y != null) {
-      const rawData = `pos=${x},${y}&af=on`;
+      const rawData = `pos=${x},${y}`;
       const response = await this._apiClient.post('/v1/camera/shoot', rawData);
       return response.data;
     } else {
@@ -152,14 +167,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   // #endregion
 
   // #region Camera Properties & Settings
-
   async getAllProperties(): Promise<any> {
     const response = await this._apiClient.get('/v1/props');
     return response.data;
   }
 
   async getCaptureSettings(): Promise<any> {
-    const response = await this._apiClient.get('/v1/props');
+    const response = await this._apiClient.get('/v1/params');
     return response.data;
   }
 
@@ -170,63 +184,46 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       .join('&');
 
     const response = await this._apiClient.put('/v1/params/camera', rawData);
+    await this.refreshDisplay();
     return response.data;
   }
 
   getDialModeList(): (string | null)[] {
-    return ['U3', 'U2', 'U1', 'P', 'AV', 'TV', 'M', null];
+    return ['Auto', 'P', 'AV', 'TV', 'TAV', 'M', 'MOV', 'MY3', 'MY2', 'MY1'];
   }
 
   async setDialMode(mode: string): Promise<any> {
+    if (mode === 'MOV') mode = 'movie';
     return this.sendCommand(`cmd=bdial ${mode}`);
   }
 
-  getDriveModeList(): string[] {
-    return Object.keys(shootModeLookup) as (keyof typeof shootModeLookup)[];
+  getDriveModeList() {
+    return ['single', 'intervalComp', 'interval', 'continuous', 'bracket'];
   }
 
-  getDriveMode(): DriveMode {
-    const shootMode = this._cachedDeviceInfo?.shootMode;
-    if (shootMode !== undefined) {
-      return shootModeReverseMap[shootMode]!.driveMode as DriveMode;
-    } else {
-      throw new Error(`Shoot mode "${shootMode}" not found.`);
-    }
+  getDriveMode(): string {
+    throw new Error('getDriveMode() is not supported on Ricoh GR II');
   }
+
   getSelfTimerOptionList(): string[] {
-    const driveMode = this.getDriveMode();
-    return Object.keys(shootModeLookup[driveMode]) as TimerOption<DriveMode>[];
+    throw new Error('getSelfTimerOptionList() is not supported on Ricoh GR II');
   }
 
   getSelfTimerOption(): string {
-    const shootMode = this._cachedDeviceInfo?.shootMode;
-    if (shootMode !== undefined) {
-      return shootModeReverseMap[shootMode]!.selfTimer;
-    } else {
-      throw new Error(`Shoot mode "${shootMode}" not found.`);
-    }
+    throw new Error('getSelfTimerOption() is not supported on Ricoh GR II');
   }
 
-  async setShootMode<D extends DriveMode, T extends TimerOption<D>>(
-    driveMode: D,
-    selfTimerOption: T
+  async setShootMode(
+    _driveMode: string,
+    _selfTimerOption: string
   ): Promise<any> {
-    const supportedSelfTimerOptions = Object.keys(
-      shootModeLookup[driveMode]
-    ) as string[];
-
-    if (supportedSelfTimerOptions.includes(selfTimerOption as string)) {
-      const shootMode = shootModeLookup[driveMode][selfTimerOption];
-      return this.setCaptureSettings({ shootMode: shootMode });
-    } else {
-      const shootMode = shootModeLookup[driveMode].off;
-      return this.setCaptureSettings({ shootMode: shootMode });
-    }
+    return Promise.reject(
+      new Error('setShootMode() is not supported on Ricoh GR II')
+    );
   }
 
   getFocusModeList() {
-    const focusModes = this._cachedDeviceInfo?.focusSettingList;
-    return focusModes !== undefined ? focusModes : [];
+    return Object.keys(FOCUS_MODE_TO_COMMAND_MAP);
   }
 
   async setFocusMode(mode: string): Promise<any> {
@@ -242,7 +239,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   getFocusSetting() {
-    const value = this._cachedDeviceInfo?.focusSetting;
+    const value = this._cachedDeviceInfo?.AFMode;
     if (value !== undefined) {
       return value;
     }
@@ -258,15 +255,10 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     return response.data;
   }
 
-  /**
-   * Force refresh the display.
-   *
-   * @throws This function is not supported on Ricoh GR III
-   */
   async refreshDisplay(): Promise<any> {
-    return Promise.reject(
-      new Error('refreshDisplay() is not supported on Ricoh GR III')
-    );
+    const rawData = 'cmd=mode refresh';
+    const response = await this._apiClient.post('/_gr', rawData);
+    return response.data;
   }
 
   // #endregion
@@ -294,7 +286,9 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       case PhotoSize.SMALL:
         return `${url}?size=view`;
       case PhotoSize.LARGE:
-        return `${url}?size=xs`;
+        // Same MediaType.SMALL due to the limitation of GR II
+        // This camera model does not support generating light-weight large-sized photos.
+        return `${url}?size=view`;
     }
   }
 
@@ -322,9 +316,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     }
 
     // Event: Camera orientation change
-    if (hasAnyKey(differences, EVENT_KEY_MAP.OrientationChanged)) {
-      this.emit(CameraEvents.OrientationChanged, this.info, differences);
-    }
+    // Not supported on Ricoh GR II
   }
   // #endregion
 
@@ -411,4 +403,4 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   // #endregion
 }
 
-export default GR3Adapter;
+export default GR2Adapter;
