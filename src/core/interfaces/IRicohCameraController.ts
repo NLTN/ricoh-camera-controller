@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import type { IDeviceInfo } from './IDeviceInfo';
 import type { ICaptureSettings } from './ICaptureSettings';
-import type { GR_COMMANDS } from '../Constants';
 import type { PhotoSize } from '../enums/PhotoSize';
 import type { WritableOperationMode } from '../enums/OperationMode';
 
@@ -216,7 +215,7 @@ export interface IRicohCameraController extends EventEmitter {
    *
    * @returns {Promise<any>} A promise that resolves with an object containing the device properties.
    */
-  sendCommand(command: string | GR_COMMANDS): Promise<any>;
+  sendCommand(command: string): Promise<any>;
 
   /**
    * Retrieves a list of available media files and directories on the camera.

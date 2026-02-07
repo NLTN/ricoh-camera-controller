@@ -14,12 +14,12 @@ import {
 import { useCameraController } from '../CameraControllerContext';
 import {
   CameraEvents,
+  GR_COMMANDS,
   OperationMode,
+  type Difference,
   type IDeviceInfo,
 } from 'ricoh-camera-controller';
 import { useEventListener } from '../hooks/useEventListener';
-import { GR_COMMANDS } from 'ricoh-camera-controller';
-import type { Difference } from '../../../src/utils';
 import { CameraDisplay } from '../components/CameraDisplay';
 
 export const CameraScreen = () => {

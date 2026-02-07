@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
-import { CameraEvents } from './CameraEvents';
+import { CameraEvents } from './core/enums/CameraEvents';
 export { CameraEvents }; // Explicitly import and re-export it
 import type {
   IRicohCameraController,
@@ -9,7 +9,7 @@ import type {
   IStorage,
   IMediaList,
   IDir,
-} from './interfaces';
+} from './core/interfaces';
 export type {
   IRicohCameraController,
   IDeviceInfo,
@@ -18,16 +18,20 @@ export type {
   IMediaList,
   IDir,
 }; // Explicitly import and re-export it
-import { FOCUS_MODE_TO_COMMAND_MAP, GR_COMMANDS } from './Constants';
+import {
+  FOCUS_MODE_TO_COMMAND_MAP,
+  GR_COMMANDS,
+} from './adapters/gr2/constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 import { GR2Adapter, GR3Adapter } from './adapters';
-import type { PhotoSize } from './enums/PhotoSize';
+import type { PhotoSize } from './core/enums/PhotoSize';
 import {
   OperationMode,
   type WritableOperationMode,
-} from './enums/OperationMode';
+} from './core/enums/OperationMode';
 export { OperationMode, type WritableOperationMode };
-export * from './enums/PhotoSize';
+export * from './core/enums/PhotoSize';
+export { type Difference } from './shared/utils/ObjectComparison';
 
 interface IAdapterListener {
   event: string;
