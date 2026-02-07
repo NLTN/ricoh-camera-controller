@@ -44,7 +44,7 @@ class RicohCameraController
 {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly DEFAULT_TIMEOUT_MS = 1000;
-  private _intervalId: NodeJS.Timeout | null = null;
+  private _intervalId: ReturnType<typeof setInterval> | null = null;
   private _apiClient: AxiosInstance;
   private adapter: IRicohCameraController | null = null;
   private adapterListeners: IAdapterListener[] = [];
