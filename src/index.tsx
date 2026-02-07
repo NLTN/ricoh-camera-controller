@@ -23,7 +23,7 @@ import {
   GR_COMMANDS,
 } from './adapters/gr2/constants';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
-import { GR2Adapter, GR3Adapter } from './adapters';
+import { GR2Adapter, GR3Adapter, GR4Adapter } from './adapters';
 import type { PhotoSize } from './core/enums/PhotoSize';
 import {
   OperationMode,
@@ -73,19 +73,32 @@ class RicohCameraController
     if (this.adapter == null) {
       this.getAllProperties()
         .then((data) => {
-          if ('model' in data) {
-            this.stopCameraDetectionAndPairing();
+          if ('model' in data && typeof data.model === 'string') {
+            // Determine which adapter to use based on the camera model.
+            const model = String(data.model);
+            if (model.indexOf('GR IV') !== -1) {
+              this.adapter = new GR4Adapter();
+            } else if (model.indexOf('GR III') !== -1) {
+              this.adapter = new GR3Adapter();
+            } else if (model.indexOf('GR II') !== -1) {
+              this.adapter = new GR2Adapter();
+            } else if (
+              model.toUpperCase().indexOf('GR') !== -1 &&
+              model.toUpperCase().indexOf('RICOH') !== -1
+            ) {
+              // If the model is any other RICOH GR variant (such as GR V, GR VI, etc.),
+              // use the GR4Adapter as the default.
+              // Hopefully, everything will work properly.
+              this.adapter = new GR4Adapter();
+            }
 
-            const isGR2 = data.model === 'GR II';
-
-            this.adapter = isGR2 ? new GR2Adapter() : new GR3Adapter();
-
-            this.forwardAdapterEvents(Object.values(CameraEvents));
-
-            // this.emit(CameraEvents.Connected, data);
-            this.adapter.once(CameraEvents.Disconnected, () => this.reset());
-
-            this.adapter.startListeningToEvents();
+            // If an adapter is selected, complete the initialization process.
+            if (this.adapter !== null) {
+              this.stopCameraDetectionAndPairing();
+              this.forwardAdapterEvents(Object.values(CameraEvents));
+              this.adapter.once(CameraEvents.Disconnected, () => this.reset());
+              this.adapter.startListeningToEvents();
+            }
           }
         })
         .catch((error) => {
