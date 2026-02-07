@@ -1,5 +1,5 @@
-import type { CameraEvents } from './CameraEvents';
-import type { IDeviceInfo } from './interfaces';
+import type { CameraEvents } from '../enums/CameraEvents';
+import type { IDeviceInfo } from '../interfaces';
 
 /**
  * Type for mapping CameraEvents to the relevant CameraSettingsKeys
