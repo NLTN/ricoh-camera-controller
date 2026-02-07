@@ -189,7 +189,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   getDialModeList(): (string | null)[] {
-    return ['Auto', 'P', 'AV', 'TV', 'TAV', 'M', 'MOV', 'MY3', 'MY2', 'MY1'];
+    return ['Auto', 'P', 'Av', 'Tv', 'TAv', 'M', 'MOV', 'MY3', 'MY2', 'MY1'];
   }
 
   async setDialMode(mode: string): Promise<any> {
