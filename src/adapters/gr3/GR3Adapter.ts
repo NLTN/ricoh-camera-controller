@@ -179,8 +179,8 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
     return ['U3', 'U2', 'U1', 'P', 'AV', 'TV', 'M', null];
   }
 
-  async setDialMode(mode: string): Promise<any> {
-    return this.sendCommand(`cmd=bdial ${mode}`);
+  async setDialMode(_: string): Promise<any> {
+    throw new Error('The function is not supported on this camera model.');
   }
 
   getDriveModeList(): string[] {
@@ -232,9 +232,7 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   }
 
   async setFocusMode(_: string): Promise<any> {
-    return Promise.reject(
-      new Error('setFocusMode() is not supported on Ricoh GR III')
-    );
+    throw new Error('The function is not supported on this camera model.');
   }
 
   getFocusSetting() {
@@ -257,12 +255,10 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   /**
    * Force refresh the display.
    *
-   * @throws This function is not supported on Ricoh GR III
+   * @throws The function is not supported on this camera model
    */
   async refreshDisplay(): Promise<any> {
-    return Promise.reject(
-      new Error('refreshDisplay() is not supported on Ricoh GR III')
-    );
+    throw new Error('The function is not supported on this camera model.');
   }
 
   // #endregion
