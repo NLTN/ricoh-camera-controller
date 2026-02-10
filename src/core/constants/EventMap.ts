@@ -16,7 +16,13 @@ export type EventKeyMap = Partial<
  * - SettingsChanged: keys that affect user or camera settings and may trigger a settings update event.
  */
 export const EVENT_KEY_MAP: EventKeyMap = {
-  FocusChanged: new Set(['focused', 'focusLocked', 'focusMode']),
+  FocusChanged: new Set([
+    'focused',
+    'focusLocked',
+    'focusMode',
+    'AFMode', // For GR II only
+    'focusSetting', // For GR III, GR IV
+  ]),
   OrientationChanged: new Set(['cameraOrientation']),
   CaptureSettingsChanged: new Set([
     'av',
@@ -32,7 +38,8 @@ export const EVENT_KEY_MAP: EventKeyMap = {
     'stillSize',
     'movieSize',
     'focusMode',
-    'AFMode',
+    'AFMode', // For GR II only
+    'focusSetting', // For GR III, GR IV
   ]),
   StorageChanged: new Set(['storages']),
 } as const;
