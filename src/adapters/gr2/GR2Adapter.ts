@@ -348,11 +348,19 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
       // Attempt to retrieve all properties and store the data in the cache.
       // If successful, the device is considered connected, and an event is raised.
       // Otherwise, an error occurs, indicating that the device is not connected.
-      this.getAllProperties().then((data) => {
-        this._isConnected = true;
-        this._cachedDeviceInfo = data;
-        this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
-      });
+      this.getAllProperties()
+        .then((data) => {
+          this._isConnected = true;
+          this._cachedDeviceInfo = data;
+          this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
+        })
+        .catch((error) => {
+          if (axios.isAxiosError(error)) {
+            console.log('[AxiosError] Location GR2 fetchData');
+          } else {
+            console.log('[OtherError] Location GR2 fetchData');
+          }
+        });
     }
   }
 
