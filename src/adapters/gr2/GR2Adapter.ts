@@ -1,7 +1,10 @@
 import axios, { type AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
 import { CameraEvents } from '../../core/enums/CameraEvents';
-export { CameraEvents }; // Explicitly import and re-export it
+import {
+  ConnectionHealthMonitor,
+  type ConnectionHealthOptions,
+} from '../../shared/infrastructure/ConnectionHealthMonitor';
 import type {
   IRicohCameraController,
   IDeviceInfo,
@@ -22,13 +25,22 @@ import {
   type WritableOperationMode,
 } from '../../core/enums/OperationMode';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
-export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
+export { CameraEvents };
+export type { IRicohCameraController, IDeviceInfo, ICaptureSettings };
 
 class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
-  private readonly DEFAULT_TIMEOUT_MS = 1000;
-  private _poller: Poller;
-  private _apiClient: AxiosInstance;
+  private readonly REQUEST_TIMEOUT_MS = 1500;
+  private readonly POLLING_INTERVAL_MS = 2000;
+  private readonly CONNECTION_HEALTH_OPTIONS: ConnectionHealthOptions = {
+    maxConsecutiveFailures: 5,
+    degradedAfterFailures: 1,
+    disconnectTimeoutMs: 8000,
+    checkIntervalMs: 2000,
+  };
+  private readonly _poller: Poller;
+  private readonly _monitor: ConnectionHealthMonitor;
+  private readonly _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
 
@@ -46,11 +58,26 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
         'Connection': 'keep-alive',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       },
-      timeout: this.DEFAULT_TIMEOUT_MS,
+      timeout: this.REQUEST_TIMEOUT_MS,
     });
 
-    this._poller = new Poller(() => this.fetchData(), 2000);
-    this._poller.start(); // this.startListeningToEvents();
+    // Poller
+    this._poller = new Poller(() => this.fetchData(), this.POLLING_INTERVAL_MS);
+    this._poller.start();
+
+    // Monitor
+    this._monitor = new ConnectionHealthMonitor(
+      this.CONNECTION_HEALTH_OPTIONS,
+      {
+        onStateChange: (state) => {
+          if (state === 'DISCONNECTED') {
+            this.disconnect();
+          }
+          this.emit(CameraEvents.ConnectionStateChanged, state);
+        },
+      }
+    );
+    this._monitor.start();
   }
 
   // #region Data
@@ -340,19 +367,25 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
             this._cachedDeviceInfo = data;
             this.dispatchChangedEvents(result.differences);
           }
+          this._monitor.recordSuccess();
         })
-        .catch((_) => {
-          this.disconnect();
+        .catch(() => {
+          this._monitor.recordFailure();
         });
     } else {
       // Attempt to retrieve all properties and store the data in the cache.
       // If successful, the device is considered connected, and an event is raised.
       // Otherwise, an error occurs, indicating that the device is not connected.
-      this.getAllProperties().then((data) => {
-        this._isConnected = true;
-        this._cachedDeviceInfo = data;
-        this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
-      });
+      this.getAllProperties()
+        .then((data) => {
+          this._isConnected = true;
+          this._cachedDeviceInfo = data;
+          this.emit(CameraEvents.Connected, this._cachedDeviceInfo);
+          this._monitor.recordSuccess();
+        })
+        .catch(() => {
+          /* Intentional silence: camera API offline is an expected state */
+        });
     }
   }
 
