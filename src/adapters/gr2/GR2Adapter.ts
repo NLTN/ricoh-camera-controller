@@ -56,7 +56,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
     this._monitor = new ConnectionHealthMonitor(
       {
-        maxConsecutiveFailures: 3,
+        maxConsecutiveFailures: 5,
         degradedAfterFailures: 1,
         disconnectTimeoutMs: 8000,
         checkIntervalMs: 2000,
@@ -107,7 +107,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   // #region Device Management
 
   async getStatus(): Promise<any> {
-    const response = await this._apiClient.get('/v1/ping');
+    const response = await this._apiClient.get('/v1/ping', { timeout: 1000 });
     return response.data;
   }
 
@@ -188,12 +188,12 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Camera Properties & Settings
   async getAllProperties(): Promise<any> {
-    const response = await this._apiClient.get('/v1/props');
+    const response = await this._apiClient.get('/v1/props', { timeout: 1000 });
     return response.data;
   }
 
   async getCaptureSettings(): Promise<any> {
-    const response = await this._apiClient.get('/v1/params');
+    const response = await this._apiClient.get('/v1/params', { timeout: 1000 });
     return response.data;
   }
 
