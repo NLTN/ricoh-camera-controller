@@ -63,10 +63,10 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
       },
       {
         onStateChange: (state) => {
-          console.log('Connection state:', state);
           if (state === 'DISCONNECTED') {
             this.disconnect();
           }
+          this.emit(CameraEvents.ConnectionStateChanged, state);
         },
       }
     );
