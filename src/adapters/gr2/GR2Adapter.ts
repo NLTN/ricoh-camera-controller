@@ -21,6 +21,7 @@ import {
   OperationMode,
   type WritableOperationMode,
 } from '../../core/enums/OperationMode';
+import { ConnectionHealthMonitor } from '../../shared/infrastructure/ConnectionHealthMonitor';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
@@ -31,6 +32,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
+  private _monitor: ConnectionHealthMonitor;
 
   constructor() {
     super();
@@ -51,6 +53,24 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
     this._poller = new Poller(() => this.fetchData(), 2000);
     this._poller.start(); // this.startListeningToEvents();
+
+    this._monitor = new ConnectionHealthMonitor(
+      {
+        maxConsecutiveFailures: 3,
+        degradedAfterFailures: 1,
+        disconnectTimeoutMs: 8000,
+        checkIntervalMs: 2000,
+      },
+      {
+        onStateChange: (state) => {
+          console.log('Connection state:', state);
+          if (state === 'DISCONNECTED') {
+            this.disconnect();
+          }
+        },
+      }
+    );
+    this._monitor.start();
   }
 
   // #region Data
@@ -340,9 +360,12 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
             this._cachedDeviceInfo = data;
             this.dispatchChangedEvents(result.differences);
           }
+
+          this._monitor.recordSuccess();
         })
         .catch((_) => {
-          this.disconnect();
+          this._monitor.recordFailure();
+          // this.disconnect();
         });
     } else {
       // Attempt to retrieve all properties and store the data in the cache.
