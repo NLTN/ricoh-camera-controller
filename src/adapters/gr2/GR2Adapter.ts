@@ -21,18 +21,28 @@ import {
   OperationMode,
   type WritableOperationMode,
 } from '../../core/enums/OperationMode';
-import { ConnectionHealthMonitor } from '../../shared/infrastructure/ConnectionHealthMonitor';
+import {
+  ConnectionHealthMonitor,
+  type ConnectionHealthOptions,
+} from '../../shared/infrastructure/ConnectionHealthMonitor';
 export { GR_COMMANDS, FOCUS_MODE_TO_COMMAND_MAP };
 export type { IRicohCameraController, IDeviceInfo, ICaptureSettings }; // Explicitly import and re-export it
 
 class GR2Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
-  private readonly DEFAULT_TIMEOUT_MS = 1000;
-  private _poller: Poller;
-  private _apiClient: AxiosInstance;
+  private readonly REQUEST_TIMEOUT_MS = 1500;
+  private readonly POLLING_INTERVAL_MS = 2000;
+  private readonly CONNECTION_HEALTH_OPTIONS: ConnectionHealthOptions = {
+    maxConsecutiveFailures: 5,
+    degradedAfterFailures: 1,
+    disconnectTimeoutMs: 8000,
+    checkIntervalMs: 2000,
+  };
+  private readonly _poller: Poller;
+  private readonly _monitor: ConnectionHealthMonitor;
+  private readonly _apiClient: AxiosInstance;
   private _isConnected: boolean = false;
   private _cachedDeviceInfo: IDeviceInfo | null;
-  private _monitor: ConnectionHealthMonitor;
 
   constructor() {
     super();
@@ -48,19 +58,14 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
         'Connection': 'keep-alive',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       },
-      timeout: this.DEFAULT_TIMEOUT_MS,
+      timeout: this.REQUEST_TIMEOUT_MS,
     });
 
-    this._poller = new Poller(() => this.fetchData(), 2000);
-    this._poller.start(); // this.startListeningToEvents();
+    this._poller = new Poller(() => this.fetchData(), this.POLLING_INTERVAL_MS);
+    this._poller.start();
 
     this._monitor = new ConnectionHealthMonitor(
-      {
-        maxConsecutiveFailures: 5,
-        degradedAfterFailures: 1,
-        disconnectTimeoutMs: 8000,
-        checkIntervalMs: 2000,
-      },
+      this.CONNECTION_HEALTH_OPTIONS,
       {
         onStateChange: (state) => {
           if (state === 'DISCONNECTED') {
@@ -107,7 +112,7 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
   // #region Device Management
 
   async getStatus(): Promise<any> {
-    const response = await this._apiClient.get('/v1/ping', { timeout: 1000 });
+    const response = await this._apiClient.get('/v1/ping');
     return response.data;
   }
 
@@ -188,12 +193,12 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
   // #region Camera Properties & Settings
   async getAllProperties(): Promise<any> {
-    const response = await this._apiClient.get('/v1/props', { timeout: 1000 });
+    const response = await this._apiClient.get('/v1/props');
     return response.data;
   }
 
   async getCaptureSettings(): Promise<any> {
-    const response = await this._apiClient.get('/v1/params', { timeout: 1000 });
+    const response = await this._apiClient.get('/v1/params');
     return response.data;
   }
 
