@@ -308,12 +308,18 @@ class GR2Adapter extends EventEmitter implements IRicohCameraController {
 
     switch (size) {
       case PhotoSize.THUMBNAIL:
-        return `${url}?size=thumb`;
+        if (filename.endsWith('JPG') || filename.endsWith('jpg')) {
+          return `${url}?size=thumb`;
+        } else {
+          // Same as PhotoSize.SMALL due to camera API limitations.
+          // This camera model doesn't support 'thumbnail' size for RAW or VIDEO files.
+          return `${url}?size=view`;
+        }
       case PhotoSize.SMALL:
         return `${url}?size=view`;
       case PhotoSize.LARGE:
-        // Same MediaType.SMALL due to the limitation of GR II
-        // This camera model does not support generating light-weight large-sized photos.
+        // Same as PhotoSize.SMALL due to camera API limitations.
+        // This camera model doesn't support generating light-weight large-sized photos.
         return `${url}?size=view`;
     }
   }
