@@ -313,7 +313,13 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
       case PhotoSize.SMALL:
         return `${url}?size=view`;
       case PhotoSize.LARGE:
-        return `${url}?size=xs`;
+        if (filename.endsWith('JPG') || filename.endsWith('jpg')) {
+          return `${url}?size=xs`;
+        } else {
+          // Same as PhotoSize.SMALL due to camera API limitations.
+          // This camera model doesn't support 'xs' size for RAW or VIDEO files.
+          return `${url}?size=view`;
+        }
     }
   }
 
