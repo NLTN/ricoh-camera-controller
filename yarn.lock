@@ -7537,6 +7537,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventemitter3@npm:^5.0.4":
+  version: 5.0.4
+  resolution: "eventemitter3@npm:5.0.4"
+  checksum: bcbd2c3a9d2553c2289623ede8aab474d5c92bcbf18e5fe76f0e550c2b7801afb5a4351c7f11e8ee2379cca1ee48316aeb98fc3b946b7dd1f47a4c1ee8c4dcf2
+  languageName: node
+  linkType: hard
+
 "events@npm:^3.3.0":
   version: 3.3.0
   resolution: "events@npm:3.3.0"
@@ -12630,6 +12637,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-safe-area-context@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "react-native-safe-area-context@npm:5.7.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 0d831f4dc64e8453c67c095fe02d68ccf21b808c6338ef6a4db1cfacf3167956b682db40308a3f3152e59e9a5203b025f4bf28c2968c95e3afa22d9f52062ee0
+  languageName: node
+  linkType: hard
+
 "react-native-web@npm:^0.21.2":
   version: 0.21.2
   resolution: "react-native-web@npm:0.21.2"
@@ -13079,6 +13096,7 @@ __metadata:
     react-dom: 19.2.3
     react-native: 0.81.5
     react-native-builder-bob: ^0.40.17
+    react-native-safe-area-context: ^5.7.0
     react-native-web: ^0.21.2
     react-native-webview: ^13.16.0
   languageName: unknown
@@ -13103,6 +13121,7 @@ __metadata:
     eslint-plugin-ft-flow: ^3.0.11
     eslint-plugin-prettier: ^5.5.5
     eslint-plugin-react: ^7.37.5
+    eventemitter3: ^5.0.4
     events: ^3.3.0
     globals: ^16.5.0
     jest: ^30.2.0

@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import { CameraEvents } from '../../core/enums/CameraEvents';
 import {
   ConnectionHealthMonitor,
