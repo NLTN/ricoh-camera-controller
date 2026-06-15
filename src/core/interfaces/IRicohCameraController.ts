@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import type { IDeviceInfo } from './IDeviceInfo';
 import type { ICaptureSettings } from './ICaptureSettings';
 import type { PhotoSize } from '../enums/PhotoSize';
