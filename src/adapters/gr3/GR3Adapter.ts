@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import { CameraEvents } from '../../core/enums/CameraEvents';
 import {
   ConnectionHealthMonitor,
@@ -32,6 +32,7 @@ export type { IRicohCameraController, IDeviceInfo, ICaptureSettings };
 class GR3Adapter extends EventEmitter implements IRicohCameraController {
   private readonly BASE_URL = 'http://192.168.0.1';
   private readonly REQUEST_TIMEOUT_MS = 1500;
+  private readonly REQUEST_MEDIA_LIST_TIMEOUT_MS = 15_000;
   private readonly POLLING_INTERVAL_MS = 2000;
   private readonly CONNECTION_HEALTH_OPTIONS: ConnectionHealthOptions = {
     maxConsecutiveFailures: 5,
@@ -293,7 +294,9 @@ class GR3Adapter extends EventEmitter implements IRicohCameraController {
   // #region Media Files: Photos & Videos
 
   async getMediaList(): Promise<IMediaList> {
-    const response = await this._apiClient.get('/v1/photos');
+    const response = await this._apiClient.get('/v1/photos', {
+      timeout: this.REQUEST_MEDIA_LIST_TIMEOUT_MS,
+    });
     if (response.data.errCode === 200) {
       return response.data;
     }
